@@ -65,7 +65,7 @@ router.route('/Votes')
   .get(async function(req, res) {
     //Select * FROM votes
     await client.connect()
-    var sqlReturn = await client.query('SELECT * FROM votes')
+    var sqlReturn = await client.query('SELECT * FROM votes;')
     await client.end()
     res.json(sqlReturn)
   })
@@ -77,7 +77,7 @@ router.route('/Votes')
 
     //Insert into votes (poll_id, voted_for_proposal, address, message) VALUES (stuff) 
     await client.connect()
-    var sqlReturn = await client.query('INSERT INTO votes (poll_id, voted_for_proposal, address, message) VALUES (' + req.body.poll_id + ', ' + req.body.voted_for_proposal + ', ' + req.body.address + ', ' + req.body.message + ')')
+    var sqlReturn = await client.query('INSERT INTO votes (poll_id, voted_for_proposal, address, message) VALUES (' + req.body.poll_id + ', ' + req.body.voted_for_proposal + ', ' + req.body.address + ', ' + req.body.message + ');')
     await client.end()
     res.json('message: success')
   });
@@ -87,7 +87,7 @@ router.route('/Votes/:PollId')
   .get(async function(req, res) {
     //SELECT * FROM votes WHERE poll_id = stuff
     await client.connect()
-    var sqlReturn = await client.query('SELECT * FROM votes WHERE poll_id = ' + req.param.PollId)
+    var sqlReturn = await client.query('SELECT * FROM votes WHERE poll_id = ' + req.param.PollId + ';')
     await client.end()
     res.json(sqlReturn)
   })
