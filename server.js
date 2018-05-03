@@ -45,9 +45,6 @@ router.route('/Poll')
   //liefert Liste mit allen Polls
   .get(function(req, res) {})
 
-  //erstellt einen neuen poll
-  .post(function(req, res) {});
-
 router.route('/Poll/:PollId')
   //liefert poll mit gegebener poll id
   .get(function(req, res) {})
@@ -63,9 +60,9 @@ router.route('/Votes/:PollId')
   //liefert alle votes des polls mit pollId
   .get(function(req, res) {})
 
-router.route('/Proposal')
-  //erstellt einen neuen proposal request fuer einen poll
-  .post(function(req, res) {});
+router.route('/Proposal/:ProposalId')
+  //liefert einen proposal mit gegebener id
+  .get(function(req, res) {});
 
 //REGISTER ROUTES
   // =================================
