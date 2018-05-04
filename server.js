@@ -14,6 +14,10 @@ var pg = require('pg')
 var connectionsString = 'postgres://votingadmin:voting4slockit@localhost/voting'
 var client = new pg.Client(connectionsString)
 
+//blockchain requirements
+var Web3 = require('web3')
+var web3 = new Web3(Web3.givenProvider || "http://localhost:8545");
+
 app.use(bodyParser.urlencoded({
   extended: true
 }));
@@ -75,9 +79,16 @@ router.route('/Votes')
 
     //check for validity of the message
 
+    var poll_id = req.body.message.poll_id
+    var proposal_id = req.body.message.proposal_id
+    var contract_address = req.body.message.address
+    var signature = req.body.signature
+
+    var address = await web3.personal.ecRecover(req.body.message, req.body.signature)
+
     //Insert into votes (poll_id, voted_for_proposal, address, message) VALUES (stuff) 
     await client.connect()
-    var sqlReturn = await client.query('INSERT INTO votes (poll_id, voted_for_proposal, address, message) VALUES (' + req.body.poll_id + ', ' + req.body.voted_for_proposal + ', ' + req.body.address + ', ' + req.body.message + ');')
+    var sqlReturn = await client.query('INSERT INTO votes (poll_id, voted_for_proposal, address, message) VALUES (' + poll_id + ', ' + proposal_id + ', ' + address + ', ' + req.body + ');')
     await client.end()
     res.json('message: success')
   });
@@ -87,7 +98,7 @@ router.route('/Votes/:PollId')
   .get(async function(req, res) {
     //SELECT * FROM votes WHERE poll_id = stuff
     await client.connect()
-    var sqlReturn = await client.query('SELECT * FROM votes WHERE poll_id = ' + req.param.PollId + ';')
+    var sqlReturn = await client.query('SELECT * FROM votes WHERE poll_id = ' + req.params.PollId + ';')
     await client.end()
     res.json(sqlReturn)
   })
