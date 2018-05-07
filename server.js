@@ -76,21 +76,27 @@ router.route('/Votes')
 
   //speichert einen neuen vote
   .post(async function(req, res) {
-
+    
+    var messageObject = JSON.parse(req.body.message)
     //check for validity of the message
-
-    var poll_id = req.body.message.poll_id
-    var proposal_id = req.body.message.proposal_id
-    var contract_address = req.body.message.address
+    var poll_id = messageObject.poll_id
+    var proposal_id = messageObject.proposal_id
+    var contract_address = messageObject.address
     var signature = req.body.signature
 
-    var address = await web3.personal.ecRecover(req.body.message, req.body.signature)
-
+    //var address = await web3.eth.personal.ecRecover(req.body.message, req.body.signature)
+    //var address = await web3.eth.accounts.recover(req.body.message, req.body.signature)
+    //var address = await web3.eth.personal.ecRecover("Hello world", "0x30755ed65396facf86c53e6217c52b4daebe72aa4941d89635409de4c9c7f9466d4e9aaec7977f05e923889b33c0d0dd27d7226b6e6f56ce737465c5cfd04be400")
+    var address = await web3.eth.accounts.recover('0x1da44b586eb0729ff70a73c326926f6ed5a25f5b056e7f47fbc6e58d86871655', '0xb91467e570a6466aa9e9876cbcd013baba02900b8979d43fe208a4a4f339f5fd6007e74cd82e037b800186422fc2da167c747ef045e5d18a5f5d4300f8e1a0291c');
+    //delete 0x
+    address = address.substring(2)
+    //var test = req.body;
+    //console.log("INSERT INTO votes (poll_id, voted_for_proposal, address, message) VALUES ('" + poll_id + "', '" + proposal_id + "', '" + address + "', '" + JSON.stringify(test) + "');")
     //Insert into votes (poll_id, voted_for_proposal, address, message) VALUES (stuff) 
     await client.connect()
-    var sqlReturn = await client.query('INSERT INTO votes (poll_id, voted_for_proposal, address, message) VALUES (' + poll_id + ', ' + proposal_id + ', ' + address + ', ' + req.body + ');')
+    var sqlReturn = await client.query("INSERT INTO votes (poll_id, voted_for_proposal, address, message) VALUES ('" + poll_id + "', '" + proposal_id + "', '" + address + "', '" + JSON.stringify(req.body) + "');")
     await client.end()
-    res.json('message: success')
+    res.json('"message": "success"')
   });
 
 router.route('/Votes/:PollId')
