@@ -69,14 +69,18 @@ router.route('/Votes')
   .get(async function(req, res) {
     //Select * FROM votes
     await client.connect()
-    var sqlReturn = await client.query('SELECT * FROM votes;')
+    try {
+      var sqlReturn = await client.query('SELECT * FROM votes;')
+    } catch (err) {
+      await client.end()
+    }
     await client.end()
     res.json(sqlReturn)
   })
 
   //speichert einen neuen vote
   .post(async function(req, res) {
-    
+
     var messageObject = JSON.parse(req.body.message)
     //check for validity of the message
     var poll_id = messageObject.poll_id
@@ -94,7 +98,11 @@ router.route('/Votes')
     //console.log("INSERT INTO votes (poll_id, voted_for_proposal, address, message) VALUES ('" + poll_id + "', '" + proposal_id + "', '" + address + "', '" + JSON.stringify(test) + "');")
     //Insert into votes (poll_id, voted_for_proposal, address, message) VALUES (stuff) 
     await client.connect()
-    var sqlReturn = await client.query("INSERT INTO votes (poll_id, voted_for_proposal, address, message) VALUES ('" + poll_id + "', '" + proposal_id + "', '" + address + "', '" + JSON.stringify(req.body) + "');")
+    try {
+      var sqlReturn = await client.query("INSERT INTO votes (poll_id, voted_for_proposal, address, message) VALUES ('" + poll_id + "', '" + proposal_id + "', '" + address + "', '" + JSON.stringify(req.body) + "');")
+    } catch (err) {
+      await client.end()
+    }
     await client.end()
     res.json('"message": "success"')
   });
@@ -104,7 +112,25 @@ router.route('/Votes/:PollId')
   .get(async function(req, res) {
     //SELECT * FROM votes WHERE poll_id = stuff
     await client.connect()
-    var sqlReturn = await client.query('SELECT * FROM votes WHERE poll_id = ' + req.params.PollId + ';')
+    try {
+      var sqlReturn = await client.query('SELECT * FROM votes WHERE poll_id = ' + req.params.PollId + ';')
+    } catch (err) {
+      await client.end()
+    }
+    await client.end()
+    res.json(sqlReturn)
+  })
+
+router.route('/Votes/Gas/:PollId/:ProposalId')
+  //liefert accumulated gas pro addresse
+  .get(async function(req, res) {
+    //SELECT SUM(address_value_mapping.accumulated_gas_usage) FROM address_value_mapping INNER JOIN votes ON votes.address = address_value_mapping.address AND votes.voted_for_proposal = ' + req.params.ProposalId + ' AND votes.poll_id = ' + req.params.PollId + ';'
+    await client.connect()
+    try {
+      var sqlReturn = await client.query('SELECT SUM(address_value_mapping.accumulated_gas_usage) FROM address_value_mapping INNER JOIN votes ON votes.address = address_value_mapping.address AND votes.voted_for_proposal = ' + req.params.ProposalId + ' AND votes.poll_id = ' + req.params.PollId + ';')
+    } catch (err) {
+      await client.end()
+    }
     await client.end()
     res.json(sqlReturn)
   })
