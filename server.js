@@ -222,7 +222,7 @@ var pollContract = new web3.eth.Contract([{
   }],
   "name": "LogProposalActivated",
   "type": "event"
-}])
+}], "0xb0e901f8a110fe84b3f1904e95b4e0ae75211aaa")
 
 app.use(bodyParser.urlencoded({
   extended: true
@@ -251,9 +251,21 @@ router.get('/', function(req, res) {
 
 router.route('/Poll')
   //liefert Liste mit allen Polls (blockchain request)
-  .get(function(req, res) {
-    var amountOfPolls = pollContract.methods.getPollAmount().call();
-    
+  .get(async function(req, res) {
+    var amountOfPolls = await pollContract.methods.getPollAmount().call();
+    var reslutObj = new Array();
+    for (let i = 0; i < amountOfPolls; i++) {
+      let pollObject = await pollContract.methods.polls(i).call()
+      reslutObj.push({
+        author: pollObject.author,
+        allowProposalUpdate: pollObject.allowProposalUpdate,
+        startDate: pollObject.startDate,
+        endDate: pollObject.endDate,
+        votingChoice: pollObject.votingChoice
+      })
+    }
+
+    res.json(reslutObj)
   })
 
 router.route('/Poll/:PollId')
