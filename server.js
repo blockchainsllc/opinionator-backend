@@ -270,7 +270,7 @@ router.route('/Poll')
 
 router.route('/Poll/:PollId')
   //liefert poll mit gegebener poll id (blockchain request)
-  .get(function(req, res) {})
+  .get(async function(req, res) {})
 
 router.route('/Proposal/:ProposalId')
   //liefert einen proposal mit gegebener id (blockchain request)
