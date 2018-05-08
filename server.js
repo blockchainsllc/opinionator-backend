@@ -252,17 +252,22 @@ router.get('/', function(req, res) {
 router.route('/Poll')
   //liefert Liste mit allen Polls (blockchain request)
   .get(async function(req, res) {
-    var amountOfPolls = await pollContract.methods.getPollAmount().call();
-    var reslutObj = new Array();
-    for (let i = 0; i < amountOfPolls; i++) {
-      let pollObject = await pollContract.methods.polls(i).call()
-      reslutObj.push({
-        author: pollObject.author,
-        allowProposalUpdate: pollObject.allowProposalUpdate,
-        startDate: pollObject.startDate,
-        endDate: pollObject.endDate,
-        votingChoice: pollObject.votingChoice
-      })
+    try {
+      var amountOfPolls = await pollContract.methods.getPollAmount().call();
+      var reslutObj = new Array();
+      for (let i = 0; i < amountOfPolls; i++) {
+        let pollObject = await pollContract.methods.polls(i).call()
+        reslutObj.push({
+          author: pollObject.author,
+          allowProposalUpdate: pollObject.allowProposalUpdate,
+          startDate: pollObject.startDate,
+          endDate: pollObject.endDate,
+          votingChoice: pollObject.votingChoice
+        })
+      }
+    } catch (err) {
+      console.error(err)
+      res.status(500).send('Blockchain Error')
     }
 
     res.json(reslutObj)
@@ -294,6 +299,8 @@ router.route('/Votes')
       var sqlReturn = await client.query('SELECT * FROM votes;')
     } catch (err) {
       await client.end()
+      console.error(err)
+      res.status(500).send('Database Error - Error Selecting!')
     }
     await client.end()
     res.json(sqlReturn)
@@ -301,18 +308,24 @@ router.route('/Votes')
 
   //speichert einen neuen vote
   .post(async function(req, res) {
-
+    console.log(req)
     var messageObject = JSON.parse(req.body.message)
     //check for validity of the message
     var poll_id = messageObject.poll_id
     var proposal_id = messageObject.proposal_id
     var contract_address = messageObject.address
     var signature = req.body.signature
-
+    console.log("start ecrecover")
     //var address = await web3.eth.personal.ecRecover(req.body.message, req.body.signature)
-    //var address = await web3.eth.accounts.recover(req.body.message, req.body.signature)
+    try {
+      var address = await web3.eth.accounts.recover(req.body.message, req.body.signature)
+    } catch (err) {
+      await client.end()
+      console.error(err)
+      res.status(500).send('Invalid message format!')
+    }
     //var address = await web3.eth.personal.ecRecover("Hello world", "0x30755ed65396facf86c53e6217c52b4daebe72aa4941d89635409de4c9c7f9466d4e9aaec7977f05e923889b33c0d0dd27d7226b6e6f56ce737465c5cfd04be400")
-    var address = await web3.eth.accounts.recover('0x1da44b586eb0729ff70a73c326926f6ed5a25f5b056e7f47fbc6e58d86871655', '0xb91467e570a6466aa9e9876cbcd013baba02900b8979d43fe208a4a4f339f5fd6007e74cd82e037b800186422fc2da167c747ef045e5d18a5f5d4300f8e1a0291c');
+    //var address = await web3.eth.accounts.recover('0x1da44b586eb0729ff70a73c326926f6ed5a25f5b056e7f47fbc6e58d86871655', '0xb91467e570a6466aa9e9876cbcd013baba02900b8979d43fe208a4a4f339f5fd6007e74cd82e037b800186422fc2da167c747ef045e5d18a5f5d4300f8e1a0291c');
     //delete 0x
     address = address.substring(2)
     //var test = req.body;
@@ -323,6 +336,8 @@ router.route('/Votes')
       var sqlReturn = await client.query("INSERT INTO votes (poll_id, voted_for_proposal, address, message) VALUES ('" + poll_id + "', '" + proposal_id + "', '" + address + "', '" + JSON.stringify(req.body) + "');")
     } catch (err) {
       await client.end()
+      console.error(err)
+      res.status(500).send('Database Error - Error Inserting!')
     }
     await client.end()
     res.json('"message": "success"')
@@ -337,6 +352,8 @@ router.route('/Votes/:PollId')
       var sqlReturn = await client.query('SELECT * FROM votes WHERE poll_id = ' + req.params.PollId + ';')
     } catch (err) {
       await client.end()
+      console.error(err)
+      res.status(500).send('Database Error - Error Selecting!')
     }
     await client.end()
     res.json(sqlReturn)
@@ -351,6 +368,8 @@ router.route('/Votes/Gas/:PollId/:ProposalId')
       var sqlReturn = await client.query('SELECT SUM(address_value_mapping.accumulated_gas_usage) FROM address_value_mapping INNER JOIN votes ON votes.address = address_value_mapping.address AND votes.voted_for_proposal = ' + req.params.ProposalId + ' AND votes.poll_id = ' + req.params.PollId + ';')
     } catch (err) {
       await client.end()
+      console.error(err)
+      res.status(500).send('Database Error - Error Selecting!')
     }
     await client.end()
     res.json(sqlReturn)
