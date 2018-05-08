@@ -275,11 +275,28 @@ router.route('/Poll')
 
 router.route('/Poll/:PollId')
   //liefert poll mit gegebener poll id (blockchain request)
-  .get(async function(req, res) {})
+  .get(async function(req, res) {
+    try {
+      var poll = await pollContract.methods.polls(req.params.PollId).call();
+    } catch (err) {
+      console.error(err)
+      res.status(500).send("Blockchain Error")
+    }
+    res.json(poll)
+  })
 
 router.route('/Proposal/:ProposalId')
   //liefert einen proposal mit gegebener id (blockchain request)
-  .get(function(req, res) {});
+  .get(async function(req, res) {
+    try {
+      var proposal = await pollContract.methods.proposals(req.params.ProposalId).call();
+      console.log(proposal)
+    } catch (err) {
+      console.error(err)
+      res.status(500).send("Blockchain Error")
+    }
+    res.json(proposal)
+  });
 
 /*
     id bigint NOT NULL,
