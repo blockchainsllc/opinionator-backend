@@ -17,212 +17,310 @@ var client = new pg.Client(connectionsString)
 //blockchain requirements
 var Web3 = require('web3')
 var web3 = new Web3(Web3.givenProvider || "http://localhost:8545");
-var pollContract = new web3.eth.Contract([{
-  "constant": true,
-  "inputs": [{
-    "name": "",
-    "type": "uint256"
-  }],
-  "name": "proposals",
-  "outputs": [{
-    "name": "name",
-    "type": "string"
-  }, {
-    "name": "description",
-    "type": "string"
-  }, {
-    "name": "author",
-    "type": "address"
-  }, {
-    "name": "pollId",
-    "type": "uint256"
-  }],
-  "payable": false,
-  "stateMutability": "view",
-  "type": "function"
-}, {
-  "constant": false,
-  "inputs": [{
-    "name": "_proposalName",
-    "type": "string"
-  }, {
-    "name": "_proposalDescription",
-    "type": "string"
-  }, {
-    "name": "_pollId",
-    "type": "uint256"
-  }],
-  "name": "createProposal",
-  "outputs": [],
-  "payable": false,
-  "stateMutability": "nonpayable",
-  "type": "function"
-}, {
-  "constant": true,
-  "inputs": [{
-    "name": "_pollId",
-    "type": "uint256"
-  }],
-  "name": "getPoll",
-  "outputs": [{
-    "components": [{
-      "name": "proposalIds",
-      "type": "uint256[]"
-    }, {
-      "name": "author",
-      "type": "address"
-    }, {
-      "name": "allowProposalUpdate",
-      "type": "bool"
-    }, {
-      "name": "startDate",
-      "type": "uint256"
-    }, {
-      "name": "endDate",
-      "type": "uint256"
-    }, {
-      "name": "votingChoice",
-      "type": "uint8"
-    }],
-    "name": "",
-    "type": "tuple"
-  }],
-  "payable": false,
-  "stateMutability": "view",
-  "type": "function"
-}, {
-  "constant": false,
-  "inputs": [{
-    "name": "_proposalId",
-    "type": "uint256[]"
-  }, {
-    "name": "_startDate",
-    "type": "uint256"
-  }, {
-    "name": "_endDate",
-    "type": "uint256"
-  }, {
-    "name": "_votingChoice",
-    "type": "uint8"
-  }],
-  "name": "createPoll",
-  "outputs": [],
-  "payable": false,
-  "stateMutability": "nonpayable",
-  "type": "function"
-}, {
-  "constant": false,
-  "inputs": [{
-    "name": "_proposalId",
-    "type": "uint256"
-  }, {
-    "name": "_pollId",
-    "type": "uint256"
-  }],
-  "name": "activateProposalForPoll",
-  "outputs": [],
-  "payable": false,
-  "stateMutability": "nonpayable",
-  "type": "function"
-}, {
-  "constant": true,
-  "inputs": [{
-    "name": "",
-    "type": "uint256"
-  }],
-  "name": "polls",
-  "outputs": [{
-    "name": "author",
-    "type": "address"
-  }, {
-    "name": "allowProposalUpdate",
-    "type": "bool"
-  }, {
-    "name": "startDate",
-    "type": "uint256"
-  }, {
-    "name": "endDate",
-    "type": "uint256"
-  }, {
-    "name": "votingChoice",
-    "type": "uint8"
-  }],
-  "payable": false,
-  "stateMutability": "view",
-  "type": "function"
-}, {
-  "constant": true,
-  "inputs": [{
-    "name": "_pollId",
-    "type": "uint256"
-  }],
-  "name": "getProposalsFromPoll",
-  "outputs": [{
-    "name": "",
-    "type": "uint256[]"
-  }],
-  "payable": false,
-  "stateMutability": "view",
-  "type": "function"
-}, {
-  "constant": true,
-  "inputs": [],
-  "name": "getPollAmount",
-  "outputs": [{
-    "name": "",
-    "type": "uint256"
-  }],
-  "payable": false,
-  "stateMutability": "view",
-  "type": "function"
-}, {
-  "anonymous": false,
-  "inputs": [{
-    "indexed": false,
-    "name": "proposalId",
-    "type": "uint256"
-  }, {
-    "indexed": false,
-    "name": "proposalAuthor",
-    "type": "address"
-  }, {
-    "indexed": false,
-    "name": "pollId",
-    "type": "uint256"
-  }],
-  "name": "LogCreateProposal",
-  "type": "event"
-}, {
-  "anonymous": false,
-  "inputs": [{
-    "indexed": false,
-    "name": "pollId",
-    "type": "uint256"
-  }, {
-    "indexed": false,
-    "name": "pollAuthor",
-    "type": "address"
-  }],
-  "name": "LogCreatePoll",
-  "type": "event"
-}, {
-  "anonymous": false,
-  "inputs": [{
-    "indexed": false,
-    "name": "pollId",
-    "type": "uint256"
-  }, {
-    "indexed": false,
-    "name": "proposalId",
-    "type": "uint256"
-  }, {
-    "indexed": false,
-    "name": "proposalAuthor",
-    "type": "address"
-  }],
-  "name": "LogProposalActivated",
-  "type": "event"
-}], "0xb0e901f8a110fe84b3f1904e95b4e0ae75211aaa")
+var pollContract = new web3.eth.Contract([
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "proposals",
+    "outputs": [
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "name": "author",
+        "type": "address"
+      },
+      {
+        "name": "pollId",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "_proposalName",
+        "type": "string"
+      },
+      {
+        "name": "_proposalDescription",
+        "type": "string"
+      },
+      {
+        "name": "_pollId",
+        "type": "uint256"
+      }
+    ],
+    "name": "createProposal",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "_pollId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getPoll",
+    "outputs": [
+      {
+        "components": [
+          {
+            "name": "proposalIds",
+            "type": "uint256[]"
+          },
+          {
+            "name": "author",
+            "type": "address"
+          },
+          {
+            "name": "allowProposalUpdate",
+            "type": "bool"
+          },
+          {
+            "name": "startDate",
+            "type": "uint256"
+          },
+          {
+            "name": "endDate",
+            "type": "uint256"
+          },
+          {
+            "name": "votingChoice",
+            "type": "uint8"
+          }
+        ],
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "_proposalId",
+        "type": "uint256[]"
+      },
+      {
+        "name": "_startDate",
+        "type": "uint256"
+      },
+      {
+        "name": "_endDate",
+        "type": "uint256"
+      },
+      {
+        "name": "_votingChoice",
+        "type": "uint8"
+      }
+    ],
+    "name": "createPoll",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "_proposalId",
+        "type": "uint256"
+      },
+      {
+        "name": "_pollId",
+        "type": "uint256"
+      }
+    ],
+    "name": "activateProposalForPoll",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "polls",
+    "outputs": [
+      {
+        "name": "author",
+        "type": "address"
+      },
+      {
+        "name": "allowProposalUpdate",
+        "type": "bool"
+      },
+      {
+        "name": "startDate",
+        "type": "uint256"
+      },
+      {
+        "name": "endDate",
+        "type": "uint256"
+      },
+      {
+        "name": "votingChoice",
+        "type": "uint8"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "_pollId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getProposalsFromPoll",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "getPollAmount",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "_proposalId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getProposal",
+    "outputs": [
+      {
+        "name": "",
+        "type": "string"
+      },
+      {
+        "name": "",
+        "type": "string"
+      },
+      {
+        "name": "",
+        "type": "address"
+      },
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "name": "proposalId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "name": "proposalAuthor",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "name": "pollId",
+        "type": "uint256"
+      }
+    ],
+    "name": "LogCreateProposal",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "name": "pollId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "name": "pollAuthor",
+        "type": "address"
+      }
+    ],
+    "name": "LogCreatePoll",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "name": "pollId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "name": "proposalId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "name": "proposalAuthor",
+        "type": "address"
+      }
+    ],
+    "name": "LogProposalActivated",
+    "type": "event"
+  }
+], "0x3f6cb3a6a01474315b8f03befae204f072eaaf73")
 
 app.use(bodyParser.urlencoded({
   extended: true
@@ -276,26 +374,41 @@ router.route('/Poll')
 router.route('/Poll/:PollId')
   //liefert poll mit gegebener poll id (blockchain request)
   .get(async function(req, res) {
+    var resultObj = new Array();
     try {
       var poll = await pollContract.methods.polls(req.params.PollId).call();
     } catch (err) {
       console.error(err)
       res.status(500).send("Blockchain Error")
     }
-    res.json(poll)
+    resultObj.push({
+      author: poll.author,
+      allowProposalUpdate: poll.allowProposalUpdate,
+      startDate: poll.startDate,
+      endDate: poll.endDate,
+      votingChoice: poll.votingChoice
+    })
+    res.json(resultObj)
   })
 
 router.route('/Proposal/:ProposalId')
   //liefert einen proposal mit gegebener id (blockchain request)
   .get(async function(req, res) {
+    var resultObj = new Array();
     try {
+      //var proposal = await pollContract.methods.getProposal(req.params.ProposalId).call();
       var proposal = await pollContract.methods.proposals(req.params.ProposalId).call();
-      console.log(proposal)
     } catch (err) {
       console.error(err)
       res.status(500).send("Blockchain Error")
     }
-    res.json(proposal)
+    resultObj.push({
+      name: proposal.name,
+      description: proposal.description,
+      author: proposal.author,
+      pollId: proposal.pollId
+    })
+    res.json(resultObj)
   });
 
 /*
