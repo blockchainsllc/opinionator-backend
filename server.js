@@ -338,7 +338,13 @@ var router = express.Router();
 router.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
+  try {
+    next();
+  }
+  catch(err) {
+    console.log(err)
+    res.status(500).send("Oops, something went wrong!")
+  }
 });
 
 router.get('/', function(req, res) {
@@ -444,6 +450,12 @@ router.route('/Votes')
       res.status(500).send('Invalid message format!')
     }
 
+    if(contract_address != address) {
+      res.status(400).send("Invalid Signature")
+      throw "Invalid signature"
+    }
+      
+    console.log("test")
     //delete 0x
     address = address.substring(2)
 
