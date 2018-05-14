@@ -496,9 +496,11 @@ router.route('/Votes/Gas/:PollId/:ProposalId')
       await client.end()
       console.error(err)
       res.status(500).send('Database Error - Error Selecting!')
+    } finally {
+      await client.end()
+      res.json(sqlReturn)
     }
-    await client.end()
-    res.json(sqlReturn)
+
   })
 
 //REGISTER ROUTES
