@@ -12,7 +12,7 @@ var bodyParser = require('body-parser');
 //database requirements
 var pg = require('pg')
 var connectionsString = 'postgres://votingadmin:voting4slockit@localhost/voting'
-var client = new pg.Client(connectionsString)
+
 
 //blockchain requirements
 var Web3 = require('web3')
@@ -341,7 +341,6 @@ router.use(async function(req, res, next) {
   try {
     next();
   } catch (err) {
-    await client.end()
     console.log(err)
     res.status(500).send("Oops, something went wrong!")
   }
@@ -489,6 +488,7 @@ router.route('/Votes/:PollId')
 router.route('/Votes/Gas/:PollId/:ProposalId')
   //liefert accumulated gas pro addresse
   .get(async function(req, res) {
+    var client = new pg.Client(connectionsString)
     await client.connect()
     try {
       var sqlReturn = await client.query('SELECT SUM(address_value_mapping.accumulated_gas_usage) FROM address_value_mapping INNER JOIN votes ON votes.address = address_value_mapping.address AND votes.voted_for_proposal = ' + req.params.ProposalId + ' AND votes.poll_id = ' + req.params.PollId + ';')
