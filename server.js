@@ -493,11 +493,11 @@ router.route('/Votes/Gas/:PollId/:ProposalId')
     try {
       var sqlReturn = await client.query('SELECT SUM(address_value_mapping.accumulated_gas_usage) FROM address_value_mapping INNER JOIN votes ON votes.address = address_value_mapping.address AND votes.voted_for_proposal = ' + req.params.ProposalId + ' AND votes.poll_id = ' + req.params.PollId + ';')
     } catch (err) {
-      await client.end()
+      await client.disconnect()
       console.error(err)
       res.status(500).send('Database Error - Error Selecting!')
     } finally {
-      await client.end()
+      await client.disconnect()
       res.json(sqlReturn)
     }
 
