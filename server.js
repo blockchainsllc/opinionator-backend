@@ -418,6 +418,7 @@ router.route('/Proposal/:ProposalId')
 router.route('/Votes')
   //liefert Liste aller votes
   .get(async function(req, res) {
+    var client = new pg.Client(connectionsString)
     //Select * FROM votes
     await client.connect()
     try {
@@ -456,7 +457,7 @@ router.route('/Votes')
 
     //delete 0x
     address = address.substring(2)
-
+    var client = new pg.Client(connectionsString)
     await client.connect()
     try {
       var sqlReturn = await client.query("INSERT INTO votes (poll_id, voted_for_proposal, address, message) VALUES ('" + poll_id + "', '" + proposal_id + "', '" + address + "', '" + JSON.stringify(req.body) + "');")
@@ -472,6 +473,7 @@ router.route('/Votes')
 router.route('/Votes/:PollId')
   //liefert alle votes des polls mit pollId
   .get(async function(req, res) {
+    var client = new pg.Client(connectionsString)
     //SELECT * FROM votes WHERE poll_id = stuff
     await client.connect()
     try {
