@@ -335,13 +335,13 @@ var port = process.env.PORT || 9999;
 var router = express.Router();
 
 //middleware
-router.use(function(req, res, next) {
+router.use(async function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   try {
     next();
-  }
-  catch(err) {
+  } catch (err) {
+    await client.end()
     console.log(err)
     res.status(500).send("Oops, something went wrong!")
   }
@@ -450,12 +450,11 @@ router.route('/Votes')
       res.status(500).send('Invalid message format!')
     }
 
-    if(contract_address != address) {
+    if (contract_address != address) {
       res.status(400).send("Invalid Signature")
       throw "Invalid signature"
     }
-      
-    console.log("test")
+
     //delete 0x
     address = address.substring(2)
 
