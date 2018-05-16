@@ -460,6 +460,7 @@ router.route('/Votes')
       res.status(500).send('Database Error - Error Selecting!')
     }
 
+    console.log(sqlAddressValue)
 
     let balance = web3.eth.getBalance(address)
     if (sqlAddressValue.rows[0].accumulated_gas_usage == 0) {
