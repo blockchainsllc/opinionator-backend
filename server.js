@@ -429,7 +429,7 @@ router.route('/Votes')
       res.status(500).send('Database Error - Error Selecting!')
     }
     await client.end()
-    res.json(sqlReturn)
+    res.json(sqlReturn.rows)
   })
 
   //speichert einen neuen vote
@@ -496,7 +496,7 @@ router.route('/Votes/:PollId')
       res.status(500).send('Database Error - Error Selecting!')
     }
     await client.end()
-    res.json(sqlReturn)
+    res.json(sqlReturn.rows)
   })
 
 router.route('/Votes/Gas/:PollId/:ProposalId')
@@ -512,7 +512,7 @@ router.route('/Votes/Gas/:PollId/:ProposalId')
       res.status(500).send('Database Error - Error Selecting!')
     } finally {
       await client.end()
-      res.json(sqlReturn)
+      res.json(sqlReturn.rows)
     }
 
   })
