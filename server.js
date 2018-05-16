@@ -450,10 +450,13 @@ router.route('/Votes')
       res.status(500).send('Invalid message format!')
     }
 
+    //delete 0x
+    addressNox = address.substring(2)
+
     var client = new pg.Client(connectionsString)
     await client.connect()
     try {
-      var sqlAddressValue = await client.query("SELECT accumulated_gas_usage FROM address_value_mapping WHERE address = '" + address + "';")
+      var sqlAddressValue = await client.query("SELECT accumulated_gas_usage FROM address_value_mapping WHERE address = '" + addressNox + "';")
     } catch (err) {
       await client.end()
       console.error(err)
@@ -462,17 +465,14 @@ router.route('/Votes')
 
     console.log(sqlAddressValue)
 
-    let balance = web3.eth.getBalance(address)
+    //let balance = web3.eth.getBalance(address)
     if (isEmpty(sqlAddressValue.rows)) {
       res.status(400).send("Unused Addresses are not supported!")
       throw "Invalid signature"
     }
 
-    //delete 0x
-    address = address.substring(2)
-
     try {
-      var sqlReturn = await client.query("INSERT INTO votes (poll_id, voted_for_proposal, address, message) VALUES ('" + poll_id + "', '" + proposal_id + "', '" + address + "', '" + JSON.stringify(req.body) + "');")
+      var sqlReturn = await client.query("INSERT INTO votes (poll_id, voted_for_proposal, address, message) VALUES ('" + poll_id + "', '" + proposal_id + "', '" + addressNox + "', '" + JSON.stringify(req.body) + "');")
     } catch (err) {
       await client.end()
       console.error(err)
