@@ -453,7 +453,7 @@ router.route('/Votes')
     var client = new pg.Client(connectionsString)
     await client.connect()
     try {
-      var sqlAddressValue = await client.query("SELECT accumulated_gas_usage FROM address_value_mapping WHERE address = " + address + ";")
+      var sqlAddressValue = await client.query("SELECT accumulated_gas_usage FROM address_value_mapping WHERE address = '" + address + "';")
     } catch (err) {
       await client.end()
       console.error(err)
