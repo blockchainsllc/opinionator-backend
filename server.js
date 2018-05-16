@@ -463,7 +463,7 @@ router.route('/Votes')
     console.log(sqlAddressValue)
 
     let balance = web3.eth.getBalance(address)
-    if (sqlAddressValue.rows.isEmpty()) {
+    if (isEmpty(sqlAddressValue.rows)) {
       res.status(400).send("Unused Addresses are not supported!")
       throw "Invalid signature"
     }
