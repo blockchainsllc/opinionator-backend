@@ -441,11 +441,11 @@ router.route('/Votes')
     var proposal_id = messageObject.proposal_id
     var contract_address = messageObject.address
     var signature = req.body.signature
+
     console.log("start ecrecover")
     try {
       var address = await web3.eth.accounts.recover(req.body.message, req.body.signature)
     } catch (err) {
-      await client.end()
       console.error(err)
       res.status(500).send('Invalid message format!')
     }
@@ -455,6 +455,8 @@ router.route('/Votes')
 
     var client = new pg.Client(connectionsString)
     await client.connect()
+
+    //check if the address has gas spend to avoid db spaming
     try {
       var sqlAddressValue = await client.query("SELECT accumulated_gas_usage FROM address_value_mapping WHERE address = '" + addressNox + "';")
     } catch (err) {
@@ -463,20 +465,51 @@ router.route('/Votes')
       res.status(500).send('Database Error - Error Selecting!')
     }
 
-    console.log(sqlAddressValue)
-
-    //let balance = web3.eth.getBalance(address)
     if (isEmpty(sqlAddressValue.rows)) {
       res.status(400).send("Unused Addresses are not supported!")
       throw "Invalid signature"
     }
 
-    try {
-      var sqlReturn = await client.query("INSERT INTO votes (poll_id, voted_for_proposal, address, message) VALUES ('" + poll_id + "', '" + proposal_id + "', '" + addressNox + "', '" + JSON.stringify(req.body) + "');")
-    } catch (err) {
-      await client.end()
-      console.error(err)
-      res.status(500).send('Database Error - Error Inserting!')
+    //check if vote already exists and what to do with it
+    var sqlValue = await client.query("SELECT message FROM votes WHERE address = '" + addressNox + "' AND poll_id = '" + poll_id + "';")
+    //if no entry for that poll from this address then insert
+    if (isEmpty(sqlAddressValue.rows)) {
+      try {
+        var sqlReturn = await client.query("INSERT INTO votes (poll_id, voted_for_proposal, address, message) VALUES ('" + poll_id + "', '" + proposal_id + "', '" + addressNox + "', '" + JSON.stringify(req.body) + "');")
+      } catch (err) {
+        await client.end()
+        console.error(err)
+        res.status(500).send('Database Error - Error Inserting!')
+      }
+    } else {
+      //check contract on how the poll is supposed to react
+      let pollObject = await pollContract.methods.polls(poll_id).call()
+
+      if (pollObject.votingChoice == 0)
+        //if useNewestVote
+        //    UPDATE
+        try {
+          var sqlReturn = await client.query("UPDATE votes SET proposal_id = '" + proposal_id + "', message = '" + JSON.stringify(req.body) + "';")
+        } catch (err) {
+          await client.end()
+          console.error(err)
+          res.status(500).send('Database Error - Error Updating your Vote!')
+      }
+
+      if (pollObject.votingChoice == 2)
+        //if nullifyAllOnDoubleVote
+        //    UPDATE with 0
+        try {
+          var sqlReturn = await client.query("UPDATE votes SET proposal_id = '" + proposal_id + "', message = '{'banned':'for double voting'}';")
+        } catch (err) {
+          await client.end()
+          console.error(err)
+          res.status(500).send('Database Error - Error Updating your Vote!')
+      }
+
+      //if useOldestVote
+      //    do nothing
+
     }
     await client.end()
     res.json('"message": "success"')
