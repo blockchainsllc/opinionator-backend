@@ -16,6 +16,7 @@ var connectionsString = 'postgres://votingadmin:voting4slockit@localhost/voting'
 //blockchain requirements
 var Web3 = require('web3')
 var web3 = new Web3(Web3.givenProvider || "http://localhost:8555");
+var pollContractAddress = '0xa8f75f2d9cc0cac23d57ffd58701b233ef5964a0'
 var pollContract = new web3.eth.Contract([
   {
     "constant": true,
@@ -319,7 +320,7 @@ var pollContract = new web3.eth.Contract([
     "name": "LogProposalActivated",
     "type": "event"
   }
-], "0xa8f75f2d9cc0cac23d57ffd58701b233ef5964a0")
+], pollContractAddress)
 
 app.use(bodyParser.urlencoded({
   extended: true
@@ -441,6 +442,12 @@ router.route('/Votes')
     var contract_address = messageObject.address
     var signature = req.body.signature
 
+
+    if (contract_address != pollContractAddress) {
+      res.status(400).send("Unsupported Contract!")
+      throw "Unsupported Contract"
+    }
+
     console.log("start ecrecover")
     try {
       var address = await web3.eth.accounts.recover(req.body.message, req.body.signature)
@@ -463,13 +470,8 @@ router.route('/Votes')
       console.error(err)
       res.status(500).send('Database Error - Error Selecting!')
     }
-<<<<<<< HEAD
 
 
-=======
-console.log(sqlAddressValue)
-console.log(addressNox)
->>>>>>> a23c9bbe5c57e21782fc4844ee243a9fe986ccec
     if (isEmpty(sqlAddressValue.rows)) {
       res.status(400).send("Unused Addresses are not supported!")
       throw "Invalid signature"
