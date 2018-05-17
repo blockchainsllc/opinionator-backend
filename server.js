@@ -471,11 +471,11 @@ router.route('/Votes')
     }
 
     //check if vote already exists and what to do with it
-    var sqlValue = await client.query("SELECT message FROM votes WHERE address = '" + addressNox + "' AND poll_id = '" + poll_id + "' AND contract_address = '" + contract_address + "';")
+    var sqlValue = await client.query("SELECT message FROM votes WHERE address = '" + addressNox + "' AND poll_id = '" + poll_id + "';")
     //if no entry for that poll from this address then insert
     if (isEmpty(sqlAddressValue.rows)) {
       try {
-        var sqlReturn = await client.query("INSERT INTO votes (poll_id, voted_for_proposal, address, message, contract_address) VALUES ('" + poll_id + "', '" + proposal_id + "', '" + addressNox + "', '" + JSON.stringify(req.body) + "', '" + contract_address + "');")
+        var sqlReturn = await client.query("INSERT INTO votes (poll_id, voted_for_proposal, address, message) VALUES ('" + poll_id + "', '" + proposal_id + "', '" + addressNox + "', '" + JSON.stringify(req.body) + "');")
       } catch (err) {
         await client.end()
         console.error(err)
@@ -492,7 +492,7 @@ router.route('/Votes')
       //    UPDATE
       {
         try {
-          var sqlReturn = await client.query("UPDATE votes SET proposal_id = '" + proposal_id + "', message = '" + JSON.stringify(req.body) + "' WHERE contract_address = '" + contract_address + "' AND poll_id = '" + poll_id + "';")
+          var sqlReturn = await client.query("UPDATE votes SET proposal_id = '" + proposal_id + "', message = '" + JSON.stringify(req.body) + "';")
         } catch (err) {
           await client.end()
           console.error(err)
@@ -507,7 +507,7 @@ router.route('/Votes')
       //    UPDATE with 0
       {
         try {
-          var sqlReturn = await client.query("UPDATE votes SET proposal_id = '" + proposal_id + "', message = '{'banned':'for double voting'} WHERE contract_address = '" + contract_address + "' AND poll_id = '" + poll_id + "';")
+          var sqlReturn = await client.query("UPDATE votes SET proposal_id = '" + proposal_id + "', message = '{'banned':'for double voting'}';")
         } catch (err) {
           await client.end()
           console.error(err)
@@ -528,14 +528,14 @@ router.route('/Votes')
     res.json('"message": "success - you shouldnt be here O.o"')
   });
 
-router.route('/Votes/:PollId/:ContractAddress')
+router.route('/Votes/:PollId')
   //liefert alle votes des polls mit pollId
   .get(async function(req, res) {
     var client = new pg.Client(connectionsString)
     //SELECT * FROM votes WHERE poll_id = stuff
     await client.connect()
     try {
-      var sqlReturn = await client.query("SELECT * FROM votes WHERE poll_id = '" + req.params.PollId + "' AND contract_address = '" + req.params.ContractAddress + "';")
+      var sqlReturn = await client.query('SELECT * FROM votes WHERE poll_id = ' + req.params.PollId + ';')
     } catch (err) {
       await client.end()
       console.error(err)
