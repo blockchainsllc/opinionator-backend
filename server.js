@@ -488,38 +488,51 @@ router.route('/Votes')
         console.error(err)
         res.status(500).send('Database Error - Error Inserting!')
       }
+      await client.end()
+      res.json('"message": "success - vote taken"')
     } else {
       //check contract on how the poll is supposed to react
       let pollObject = await pollContract.methods.polls(poll_id).call()
 
       if (pollObject.votingChoice == 0)
-        //if useNewestVote
-        //    UPDATE
+      //if useNewestVote
+      //    UPDATE
+      {
         try {
           var sqlReturn = await client.query("UPDATE votes SET proposal_id = '" + proposal_id + "', message = '" + JSON.stringify(req.body) + "';")
         } catch (err) {
           await client.end()
           console.error(err)
           res.status(500).send('Database Error - Error Updating your Vote!')
+        }
+        await client.end()
+        res.json('"message": "success - New vote has been noted"')
       }
 
       if (pollObject.votingChoice == 2)
-        //if nullifyAllOnDoubleVote
-        //    UPDATE with 0
+      //if nullifyAllOnDoubleVote
+      //    UPDATE with 0
+      {
         try {
           var sqlReturn = await client.query("UPDATE votes SET proposal_id = '" + proposal_id + "', message = '{'banned':'for double voting'}';")
         } catch (err) {
           await client.end()
           console.error(err)
           res.status(500).send('Database Error - Error Updating your Vote!')
+        }
+        await client.end()
+        res.json('"message": "success - This poll does not allow double voting, your vote was nullified"')
       }
 
       //if useOldestVote
       //    do nothing
-
+      if (pollObject.votingChoice == 1) {
+        await client.end()
+        res.json('"message": "success - This poll does not allow new votes"')
+      }
     }
     await client.end()
-    res.json('"message": "success"')
+    res.json('"message": "success - you shouldnt be here O.o"')
   });
 
 router.route('/Votes/:PollId')
