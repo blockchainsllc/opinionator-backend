@@ -441,7 +441,7 @@ router.route('/Votes')
       //    UPDATE
       {
         try {
-          var sqlReturn = await client.query("UPDATE votes SET proposal_id = '" + proposal_id + "', message = '" + JSON.stringify(req.body) + "' WHERE contract_address = '" + contract_address + "';")
+          var sqlReturn = await client.query("UPDATE votes SET voted_for_proposal = '" + proposal_id + "', message = '" + JSON.stringify(req.body) + "' WHERE contract_address = '" + contract_address + "';")
         } catch (err) {
           await client.end()
           console.error(err)
@@ -456,7 +456,7 @@ router.route('/Votes')
       //    UPDATE with 0
       {
         try {
-          var sqlReturn = await client.query("UPDATE votes SET proposal_id = '" + proposal_id + "', message = '" + JSON.stringify({
+          var sqlReturn = await client.query("UPDATE votes SET voted_for_proposal = '" + proposal_id + "', message = '" + JSON.stringify({
               banned: 'for double voting'
             }) + "' WHERE contract_address = '" + contract_address + "';")
         } catch (err) {
