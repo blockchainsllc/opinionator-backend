@@ -439,7 +439,7 @@ router.route('/Votes')
     //check for validity of the message
     var poll_id = messageObject.poll_id
     var proposal_id = messageObject.proposal_id
-    var contract_address = messageObject.address
+    var contract_address = messageObject.pollContractAddress
     var signature = req.body.signature
     console.log(contract_address)
 
