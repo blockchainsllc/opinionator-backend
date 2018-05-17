@@ -480,7 +480,7 @@ router.route('/Votes')
     //check if vote already exists and what to do with it
     var sqlValue = await client.query("SELECT message FROM votes WHERE address = '" + addressNox + "' AND poll_id = '" + poll_id + "';")
     //if no entry for that poll from this address then insert
-    if (isEmpty(sqlAddressValue.rows)) {
+    if (isEmpty(sqlValue.rows)) {
       try {
         var sqlReturn = await client.query("INSERT INTO votes (poll_id, voted_for_proposal, address, message) VALUES ('" + poll_id + "', '" + proposal_id + "', '" + addressNox + "', '" + JSON.stringify(req.body) + "');")
       } catch (err) {
@@ -493,7 +493,6 @@ router.route('/Votes')
     } else {
       //check contract on how the poll is supposed to react
       let pollObject = await pollContract.methods.polls(poll_id).call()
-
       if (pollObject.votingChoice == 0)
       //if useNewestVote
       //    UPDATE
