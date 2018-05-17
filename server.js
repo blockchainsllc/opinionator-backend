@@ -463,8 +463,13 @@ router.route('/Votes')
       console.error(err)
       res.status(500).send('Database Error - Error Selecting!')
     }
+<<<<<<< HEAD
 
 
+=======
+console.log(sqlAddressValue)
+console.log(addressNox)
+>>>>>>> a23c9bbe5c57e21782fc4844ee243a9fe986ccec
     if (isEmpty(sqlAddressValue.rows)) {
       res.status(400).send("Unused Addresses are not supported!")
       throw "Invalid signature"
@@ -481,51 +486,38 @@ router.route('/Votes')
         console.error(err)
         res.status(500).send('Database Error - Error Inserting!')
       }
-      await client.end()
-      res.json('"message": "success - vote taken"')
     } else {
       //check contract on how the poll is supposed to react
       let pollObject = await pollContract.methods.polls(poll_id).call()
 
       if (pollObject.votingChoice == 0)
-      //if useNewestVote
-      //    UPDATE
-      {
+        //if useNewestVote
+        //    UPDATE
         try {
           var sqlReturn = await client.query("UPDATE votes SET proposal_id = '" + proposal_id + "', message = '" + JSON.stringify(req.body) + "';")
         } catch (err) {
           await client.end()
           console.error(err)
           res.status(500).send('Database Error - Error Updating your Vote!')
-        }
-        await client.end()
-        res.json('"message": "success - New vote has been noted"')
       }
 
       if (pollObject.votingChoice == 2)
-      //if nullifyAllOnDoubleVote
-      //    UPDATE with 0
-      {
+        //if nullifyAllOnDoubleVote
+        //    UPDATE with 0
         try {
           var sqlReturn = await client.query("UPDATE votes SET proposal_id = '" + proposal_id + "', message = '{'banned':'for double voting'}';")
         } catch (err) {
           await client.end()
           console.error(err)
           res.status(500).send('Database Error - Error Updating your Vote!')
-        }
-        await client.end()
-        res.json('"message": "success - This poll does not allow double voting, your vote was nullified"')
       }
 
       //if useOldestVote
       //    do nothing
-      if (pollObject.votingChoice == 1) {
-        await client.end()
-        res.json('"message": "success - This poll does not allow new votes"')
-      }
+
     }
     await client.end()
-    res.json('"message": "success - you shouldnt be here O.o"')
+    res.json('"message": "success"')
   });
 
 router.route('/Votes/:PollId')
@@ -545,13 +537,13 @@ router.route('/Votes/:PollId')
     res.json(sqlReturn.rows)
   })
 
-router.route('/Votes/Gas/:PollId/:ProposalId/:ContractAddress')
+router.route('/Votes/Gas/:PollId/:ProposalId')
   //liefert accumulated gas pro addresse
   .get(async function(req, res) {
     var client = new pg.Client(connectionsString)
     await client.connect()
     try {
-      var sqlReturn = await client.query('SELECT SUM(address_value_mapping.accumulated_gas_usage) FROM address_value_mapping INNER JOIN votes ON votes.address = address_value_mapping.address AND votes.voted_for_proposal = ' + req.params.ProposalId + ' AND votes.poll_id = ' + req.params.PollId + ' AND votes.contract_address = ' + req.params.ContractAddress + ';')
+      var sqlReturn = await client.query('SELECT SUM(address_value_mapping.accumulated_gas_usage) FROM address_value_mapping INNER JOIN votes ON votes.address = address_value_mapping.address AND votes.voted_for_proposal = ' + req.params.ProposalId + ' AND votes.poll_id = ' + req.params.PollId + ';')
     } catch (err) {
       await client.end()
       console.error(err)
