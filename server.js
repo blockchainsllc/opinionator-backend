@@ -443,7 +443,7 @@ router.route('/Votes')
     var signature = req.body.signature
 
 
-    if (contract_address != pollContractAddress) {
+    if (contract_address.localeCompare(pollContractAddress) != 0) {
       res.status(400).send("Unsupported Contract!")
       throw "Unsupported Contract"
     }
