@@ -13,10 +13,9 @@ var bodyParser = require('body-parser');
 var pg = require('pg')
 var connectionsString = 'postgres://votingadmin:voting4slockit@localhost/voting'
 
-
 //blockchain requirements
 var Web3 = require('web3')
-var web3 = new Web3(Web3.givenProvider || "http://localhost:8545");
+var web3 = new Web3(Web3.givenProvider || "http://localhost:8555");
 var pollContract = new web3.eth.Contract([
   {
     "constant": true,
@@ -320,7 +319,7 @@ var pollContract = new web3.eth.Contract([
     "name": "LogProposalActivated",
     "type": "event"
   }
-], "0x3f6cb3a6a01474315b8f03befae204f072eaaf73")
+], "0xa8f75f2d9cc0cac23d57ffd58701b233ef5964a0")
 
 app.use(bodyParser.urlencoded({
   extended: true
@@ -464,7 +463,8 @@ router.route('/Votes')
       console.error(err)
       res.status(500).send('Database Error - Error Selecting!')
     }
-
+console.log(sqlAddressValue)
+console.log(addressNox)
     if (isEmpty(sqlAddressValue.rows)) {
       res.status(400).send("Unused Addresses are not supported!")
       throw "Invalid signature"
