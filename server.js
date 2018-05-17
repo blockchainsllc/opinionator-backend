@@ -441,7 +441,7 @@ router.route('/Votes')
     var proposal_id = messageObject.proposal_id
     var contract_address = messageObject.address
     var signature = req.body.signature
-
+    console.log(contract_address)
 
     if (contract_address.localeCompare(pollContractAddress) != 0) {
       res.status(400).send("Unsupported Contract!")
