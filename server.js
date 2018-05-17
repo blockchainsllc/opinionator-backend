@@ -441,7 +441,7 @@ router.route('/Votes')
       //    UPDATE
       {
         try {
-          var sqlReturn = await client.query("UPDATE votes SET proposal_id = '" + proposal_id + "', message = '" + JSON.stringify(req.body) + "';")
+          var sqlReturn = await client.query("UPDATE votes SET proposal_id = '" + proposal_id + "', message = '" + JSON.stringify(req.body) + "' WHERE contract_address = '" + contract_address + "';")
         } catch (err) {
           await client.end()
           console.error(err)
