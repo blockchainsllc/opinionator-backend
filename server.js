@@ -465,6 +465,7 @@ router.route('/Votes')
       res.status(500).send('Database Error - Error Selecting!')
     }
 
+
     if (isEmpty(sqlAddressValue.rows)) {
       res.status(400).send("Unused Addresses are not supported!")
       throw "Invalid signature"
