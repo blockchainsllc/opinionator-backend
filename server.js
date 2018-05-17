@@ -448,7 +448,9 @@ router.route('/Votes')
           res.status(500).send('Database Error - Error Updating your Vote!')
         }
         await client.end()
-        res.json('"message": "success - New vote has been noted"')
+        res.json({
+          message: "success - New vote has been noted"
+        })
       }
 
       if (pollObject.votingChoice == 2)
