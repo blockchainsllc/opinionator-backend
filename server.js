@@ -16,6 +16,7 @@ var connectionsString = 'postgres://votingadmin:voting4slockit@localhost/voting'
 //blockchain requirements
 var Web3 = require('web3')
 var web3 = new Web3(Web3.givenProvider || "http://localhost:8555");
+const BN = require('bn.js');
 var pollContractAddress = '0xa8f75f2d9cc0cac23d57ffd58701b233ef5964a0'
 var pollContract = new web3.eth.Contract([{
   "constant": true,
@@ -532,17 +533,18 @@ router.route('/Votes/Gas/:PollId/:ProposalId')
       res.status(500).send('Database Error - Error Selecting!')
     }
 
-    var sum;
+    var sum = new BN(0);
     for (let element of addressList.rows) {
       //console.log(parseInt("0x" + element.address + ": " + await web3.eth.getBalance("0x" + element.address)))
       console.log(sum)
-      sum = sum + parseInt(await web3.eth.getBalance("0x" + element.address))
+      var biggy = new BN(await web3.eth.getBalance("0x" + element.address))
+      sum = sum.add(biggy);
     }
 
     await client.end()
     res.json({
       gas_sum: sqlReturn.rows,
-      coin_sum: sum
+      coin_sum: sum.toString()
     })
 
 
