@@ -531,12 +531,12 @@ router.route('/Votes/Gas/:PollId/:ProposalId')
       console.error(err)
       res.status(500).send('Database Error - Error Selecting!')
     }
-    console.log(addressList.rows)
+
     var sum;
     for (let element of addressList.rows) {
 
       //console.log(parseInt("" + element.address + ": " + await web3.eth.getBalance(element.address)))
-      sum = sum + parseInt(await web3.eth.getBalance(element.address))
+      sum = sum + parseInt(await web3.eth.getBalance("0x" + element.address))
     }
 
     await client.end()
