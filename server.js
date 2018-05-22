@@ -522,10 +522,27 @@ router.route('/Votes/Gas/:PollId/:ProposalId')
       await client.end()
       console.error(err)
       res.status(500).send('Database Error - Error Selecting!')
-    } finally {
-      await client.end()
-      res.json(sqlReturn.rows)
     }
+
+    try {
+      var addressList = await client.query('SELECT address FROM votes WHERE poll_id = ' + req.params.PollId + ' AND voted_for_proposal = ' + req.params.ProposalId + ';')
+    } catch (err) {
+      await client.end()
+      console.error(err)
+      res.status(500).send('Database Error - Error Selecting!')
+    }
+
+    var sum;
+    for (let element of addressList.rows) {
+      sum = sum + await web3.eth.getBalance(element)
+    }
+
+    await client.end()
+    res.json({
+      gas_sum: sqlReturn.rows,
+      coin_sum: sum
+    })
+
 
   })
 
