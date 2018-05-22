@@ -534,7 +534,7 @@ router.route('/Votes/Gas/:PollId/:ProposalId')
 
     var sum;
     for (let element of addressList.rows) {
-      sum = sum + Number(await web3.eth.getBalance(element.address))
+      sum = sum + parseInt(await web3.eth.getBalance(element.address))
     }
 
     await client.end()
