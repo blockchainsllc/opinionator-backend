@@ -539,7 +539,7 @@ router.route('/Votes/Gas/:PollId/:ProposalId')
 
     await client.end()
     res.json({
-      gas_sum: sqlReturn.rows.sum,
+      gas_sum: sqlReturn.rows,
       coin_sum: sum
     })
 
