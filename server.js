@@ -280,6 +280,7 @@ var router = express.Router();
 
 //middleware
 router.use(async function(req, res, next) {
+  //allow cross site scripting
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   try {
@@ -290,6 +291,7 @@ router.use(async function(req, res, next) {
   }
 });
 
+//standart route
 router.get('/', function(req, res) {
   res.json({
     message: 'Blockchain voting for the win!'
@@ -297,13 +299,14 @@ router.get('/', function(req, res) {
 });
 
 router.route('/Poll')
-  //liefert Liste mit allen Polls (blockchain request)
+  //delivers a list of all polls (blockchain request)
   .get(async function(req, res) {
     try {
       var amountOfPolls = await pollContract.methods.getPollAmount().call();
       var reslutObj = new Array();
       for (let i = 0; i < amountOfPolls; i++) {
         let pollObject = await pollContract.methods.polls(i).call()
+        //parse the object returned from the contract to adapt to our needs
         reslutObj.push({
           author: pollObject.author,
           allowProposalUpdate: pollObject.allowProposalUpdate,
@@ -321,7 +324,7 @@ router.route('/Poll')
   })
 
 router.route('/Poll/:PollId')
-  //liefert poll mit gegebener poll id (blockchain request)
+  //delivers poll with given poll id (blockchain request)
   .get(async function(req, res) {
     var resultObj = new Array();
     try {
@@ -350,6 +353,7 @@ router.route('/Proposal/:ProposalId')
       console.error(err)
       res.status(500).send("Blockchain Error")
     }
+    //parse the object returned from the contract to adapt to our needs
     resultObj.push({
       name: proposal.name,
       description: proposal.description,
@@ -360,10 +364,10 @@ router.route('/Proposal/:ProposalId')
   });
 
 router.route('/Votes')
-  //liefert Liste aller votes
+  //delivers all votes given (database request)
+  //@developer should be considerd to be turned of to avoid to much data being send (limit to poll)
   .get(async function(req, res) {
     var client = new pg.Client(connectionsString)
-    //Select * FROM votes
     await client.connect()
     try {
       var sqlReturn = await client.query('SELECT * FROM votes;')
@@ -376,7 +380,7 @@ router.route('/Votes')
     res.json(sqlReturn.rows)
   })
 
-  //speichert einen neuen vote
+  //stores a vote passed with the post
   .post(async function(req, res) {
     console.log(req)
     var messageObject = JSON.parse(req.body.message)
@@ -385,14 +389,14 @@ router.route('/Votes')
     var proposal_id = messageObject.proposal_id
     var contract_address = messageObject.pollContractAddress
     var signature = req.body.signature
-    console.log(contract_address)
 
+    //check if the contract in the passed message is supported by slockit
     if (contract_address.localeCompare(pollContractAddress) != 0) {
       res.status(400).send("Unsupported Contract!")
       throw "Unsupported Contract"
     }
 
-    console.log("start ecrecover")
+    //get the address from the signature
     try {
       var address = await web3.eth.accounts.recover(req.body.message, req.body.signature)
     } catch (err) {
@@ -400,7 +404,7 @@ router.route('/Votes')
       res.status(500).send('Invalid message format!')
     }
 
-    //delete 0x
+    //delete 0x (for database use)
     addressNox = address.substring(2)
 
     var client = new pg.Client(connectionsString)
@@ -414,9 +418,6 @@ router.route('/Votes')
       console.error(err)
       res.status(500).send('Database Error - Error Selecting!')
     }
-console.log(addressNox);
-console.log(sqlAddressValue.rows);
-
     if (isEmpty(sqlAddressValue.rows)) {
       res.status(400).send("Unused Addresses are not supported!")
       throw "Invalid signature"
@@ -439,7 +440,7 @@ console.log(sqlAddressValue.rows);
         successfullyVoted: true
       })
     } else {
-      //check contract on how the poll is supposed to react
+      //check contract on how the poll is supposed to react if the address already voted
       let pollObject = await pollContract.methods.polls(poll_id).call()
       if (pollObject.votingChoice == 0)
       //if useNewestVote
@@ -489,6 +490,7 @@ console.log(sqlAddressValue.rows);
         })
       }
     }
+    //if that line is executed then something is wrong with the contract or so
     await client.end()
     res.json({
       message: "success - you shouldnt be here O.o",
@@ -497,10 +499,9 @@ console.log(sqlAddressValue.rows);
   });
 
 router.route('/Votes/:PollId')
-  //liefert alle votes des polls mit pollId
+  //delivers all polls for the poll with given id
   .get(async function(req, res) {
     var client = new pg.Client(connectionsString)
-    //SELECT * FROM votes WHERE poll_id = stuff
     await client.connect()
     try {
       var sqlReturn = await client.query('SELECT * FROM votes WHERE poll_id = ' + req.params.PollId + ';')
@@ -514,7 +515,7 @@ router.route('/Votes/:PollId')
   })
 
 router.route('/Votes/Gas/:PollId/:ProposalId')
-  //liefert accumulated gas pro addresse
+  //delivers the accumulated gas of all addresses that voted on specified proposal and the accumulated coin value of same proposal
   .get(async function(req, res) {
     var client = new pg.Client(connectionsString)
     await client.connect()
