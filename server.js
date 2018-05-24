@@ -17,7 +17,7 @@ var connectionsString = 'postgres://votingadmin:voting4slockit@localhost/voting'
 var Web3 = require('web3')
 var web3 = new Web3(Web3.givenProvider || "http://localhost:8555");
 const BN = require('bn.js');
-var pollContractAddress = '0xa8f75f2d9cc0cac23d57ffd58701b233ef5964a0'
+var pollContractAddress = '0x4502c02c652882a0a5da0ad6b09905f5a785ad6e'
 var pollContract = new web3.eth.Contract([{
   "constant": true,
   "inputs": [{
@@ -408,13 +408,14 @@ router.route('/Votes')
 
     //check if the address has gas spend to avoid db spaming
     try {
-      var sqlAddressValue = await client.query("SELECT accumulated_gas_usage FROM address_value_mapping WHERE address = '" + addressNox + "';")
+      var sqlAddressValue = await client.query("SELECT accumulated_gas_usage FROM address_value_mapping WHERE address = LOWER('" + addressNox + "');")
     } catch (err) {
       await client.end()
       console.error(err)
       res.status(500).send('Database Error - Error Selecting!')
     }
-
+console.log(addressNox);
+console.log(sqlAddressValue.rows);
 
     if (isEmpty(sqlAddressValue.rows)) {
       res.status(400).send("Unused Addresses are not supported!")
@@ -422,11 +423,11 @@ router.route('/Votes')
     }
 
     //check if vote already exists and what to do with it
-    var sqlValue = await client.query("SELECT message FROM votes WHERE address = '" + addressNox + "' AND poll_id = '" + poll_id + "';")
+    var sqlValue = await client.query("SELECT message FROM votes WHERE address = LOWER('" + addressNox + "') AND poll_id = '" + poll_id + "';")
     //if no entry for that poll from this address then insert
     if (isEmpty(sqlValue.rows)) {
       try {
-        var sqlReturn = await client.query("INSERT INTO votes (poll_id, voted_for_proposal, address, message) VALUES ('" + poll_id + "', '" + proposal_id + "', '" + addressNox + "', '" + JSON.stringify(req.body) + "');")
+        var sqlReturn = await client.query("INSERT INTO votes (poll_id, voted_for_proposal, address, message) VALUES ('" + poll_id + "', '" + proposal_id + "', LOWER('" + addressNox + "'), '" + JSON.stringify(req.body) + "');")
       } catch (err) {
         await client.end()
         console.error(err)
@@ -445,7 +446,7 @@ router.route('/Votes')
       //    UPDATE
       {
         try {
-          var sqlReturn = await client.query("UPDATE votes SET voted_for_proposal = " + proposal_id + ", message = '" + JSON.stringify(req.body) + "' WHERE poll_id = " + poll_id + " AND address = '" + addressNox + "';")
+          var sqlReturn = await client.query("UPDATE votes SET voted_for_proposal = " + proposal_id + ", message = '" + JSON.stringify(req.body) + "' WHERE poll_id = " + poll_id + " AND address = LOWER('" + addressNox + "');")
         } catch (err) {
           await client.end()
           console.error(err)
@@ -518,7 +519,7 @@ router.route('/Votes/Gas/:PollId/:ProposalId')
     var client = new pg.Client(connectionsString)
     await client.connect()
     try {
-      var sqlReturn = await client.query('SELECT SUM(address_value_mapping.accumulated_gas_usage) FROM address_value_mapping INNER JOIN votes ON votes.address = address_value_mapping.address AND votes.voted_for_proposal = ' + req.params.ProposalId + ' AND votes.poll_id = ' + req.params.PollId + ';')
+      var sqlReturn = await client.query('SELECT SUM(address_value_mapping.accumulated_gas_usage) FROM address_value_mapping INNER JOIN votes ON LOWER(votes.address) = LOWER(address_value_mapping.address) AND votes.voted_for_proposal = ' + req.params.ProposalId + ' AND votes.poll_id = ' + req.params.PollId + ';')
     } catch (err) {
       await client.end()
       console.error(err)
