@@ -382,7 +382,6 @@ router.route('/Votes')
 
   //stores a vote passed with the post
   .post(async function(req, res) {
-    console.log(req)
     var messageObject = JSON.parse(req.body.message)
     //check for validity of the message
     var poll_id = messageObject.poll_id
@@ -548,6 +547,26 @@ router.route('/Votes/Gas/:PollId/:ProposalId')
       coin_sum: sum.toString()
     })
 
+
+  })
+
+router.route('/Votes/Miner/:PollId/:ProposalId')
+  //delivers the accumulated difficulty solved of all miners that voted on specified proposal and the accumulated coin value of same proposal
+  .get(async function(req, res) {
+    var client = new pg.Client(connectionsString)
+    await client.connect()
+    try {
+      var sqlReturn = await client.query('SELECT SUM(difficulty) FROM block INNER JOIN votes ON votes.address = block.miner_address AND votes.voted_for_proposal = ' + req.params.ProposalId + ' AND votes.poll_id = ' + req.params.PollId + ' GROUP BY block.miner_address;')
+    } catch (err) {
+      await client.end()
+      console.error(err)
+      res.status(500).send('Database Error - Error Selecting!')
+    }
+
+    await client.end()
+    res.json({
+      gas_sum: sqlReturn.rows
+    })
 
   })
 
