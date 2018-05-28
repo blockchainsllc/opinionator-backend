@@ -411,7 +411,7 @@ router.route('/Votes')
 
     //check if the address has gas spend to avoid db spaming
     try {
-      var sqlAddressValue = await client.query("SELECT accumulated_gas_usage FROM address_value_mapping WHERE address = LOWER('" + addressNox + "');")
+      var sqlAddressValue = await client.query("SELECT SUM(gas_used) FROM transactions WHERE tx_sender = LOWER('" + addressNox + "');")
     } catch (err) {
       await client.end()
       console.error(err)
@@ -519,7 +519,7 @@ router.route('/Votes/Gas/:PollId/:ProposalId')
     var client = new pg.Client(connectionsString)
     await client.connect()
     try {
-      var sqlReturn = await client.query('SELECT SUM(address_value_mapping.accumulated_gas_usage) FROM address_value_mapping INNER JOIN votes ON LOWER(votes.address) = LOWER(address_value_mapping.address) AND votes.voted_for_proposal = ' + req.params.ProposalId + ' AND votes.poll_id = ' + req.params.PollId + ';')
+      var sqlReturn = await client.query('SELECT SUM(transactions.gas_used) FROM transactions INNER JOIN votes ON LOWER(votes.address) = LOWER(transactions.tx_sender) AND votes.voted_for_proposal = ' + req.params.ProposalId + ' AND votes.poll_id = ' + req.params.PollId + ';')
     } catch (err) {
       await client.end()
       console.error(err)
@@ -556,7 +556,7 @@ router.route('/Votes/Miner/:PollId/:ProposalId')
     var client = new pg.Client(connectionsString)
     await client.connect()
     try {
-      var sqlReturn = await client.query('SELECT SUM(difficulty) FROM block INNER JOIN votes ON votes.address = block.miner_address AND votes.voted_for_proposal = ' + req.params.ProposalId + ' AND votes.poll_id = ' + req.params.PollId + ' GROUP BY block.miner_address;')
+      var sqlReturn = await client.query('SELECT SUM(difficulty) FROM block INNER JOIN votes ON votes.address = block.miner AND votes.voted_for_proposal = ' + req.params.ProposalId + ' AND votes.poll_id = ' + req.params.PollId + ' GROUP BY block.miner;')
     } catch (err) {
       await client.end()
       console.error(err)
