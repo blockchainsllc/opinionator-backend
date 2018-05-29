@@ -15,7 +15,7 @@ var connectionsString = 'postgres://votingadmin:voting4slockit@localhost/voting'
 
 //blockchain requirements
 var Web3 = require('web3')
-var web3 = new Web3(Web3.givenProvider || "http://localhost:8555");
+var web3 = new Web3(Web3.givenProvider || "http://localhost:8545");
 const BN = require('bn.js');
 var pollContractAddress = '0x4502c02c652882a0a5da0ad6b09905f5a785ad6e'
 var pollContract = new web3.eth.Contract([{
