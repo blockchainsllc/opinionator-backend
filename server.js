@@ -425,11 +425,15 @@ router.route('/Votes')
     }
 
     //check if vote already exists and what to do with it
-    var sqlValue = await client.query("SELECT message FROM votes WHERE address = LOWER('" + addressNox + "') AND poll_id = '" + poll_id + "';")
+    sqlStatement = "SELECT message FROM votes WHERE address = LOWER($1) AND poll_id = $2;"
+    param = [addressNox, poll_id]
+    var sqlValue = await client.query(sqlStatement, param)
     //if no entry for that poll from this address then insert
     if (isEmpty(sqlValue.rows)) {
       try {
-        var sqlReturn = await client.query("INSERT INTO votes (poll_id, voted_for_proposal, address, message) VALUES ('" + poll_id + "', '" + proposal_id + "', LOWER('" + addressNox + "'), '" + JSON.stringify(req.body) + "');")
+        sqlStatement = "INSERT INTO votes (poll_id, voted_for_proposal, address, message) VALUES ($1,$2, LOWER($3), $4);"
+        param = [poll_id, proposal_id, addressNox, JSON.stringify(req.body)]
+        var sqlReturn = await client.query(sqlStatement, param)
       } catch (err) {
         await client.end()
         console.error(err)
@@ -448,7 +452,9 @@ router.route('/Votes')
       //    UPDATE
       {
         try {
-          var sqlReturn = await client.query("UPDATE votes SET voted_for_proposal = " + proposal_id + ", message = '" + JSON.stringify(req.body) + "' WHERE poll_id = " + poll_id + " AND address = LOWER('" + addressNox + "');")
+          sqlStatement = "UPDATE votes SET voted_for_proposal = $1, message = $2 WHERE poll_id = $3 AND address = LOWER($4);"
+          param = [proposal_id, JSON.stringify(req.body), poll_id, addressNox]
+          var sqlReturn = await client.query(sqlStatement, param)
         } catch (err) {
           await client.end()
           console.error(err)
@@ -466,9 +472,11 @@ router.route('/Votes')
       //    UPDATE with 0
       {
         try {
-          var sqlReturn = await client.query("UPDATE votes SET voted_for_proposal = '" + proposal_id + "', message = '" + JSON.stringify({
-              banned: 'for double voting'
-            }) + "' WHERE contract_address = '" + contract_address + "';")
+          sqlStatement = "UPDATE votes SET voted_for_proposal = $1, message = $2 WHERE contract_address = $3;"
+          param = [proposal_id, JSON.stringify({
+            banned: 'for double voting'
+          }), contract_address]
+          var sqlReturn = await client.query(sqlStatement, param)
         } catch (err) {
           await client.end()
           console.error(err)
@@ -505,7 +513,9 @@ router.route('/Votes/:PollId')
     var client = new pg.Client(connectionsString)
     await client.connect()
     try {
-      var sqlReturn = await client.query('SELECT * FROM votes WHERE poll_id = ' + req.params.PollId + ';')
+      sqlStatement = 'SELECT * FROM votes WHERE poll_id = $1;'
+      param = [req.params.PollId]
+      var sqlReturn = await client.query(sqlStatement, param)
     } catch (err) {
       await client.end()
       console.error(err)
@@ -521,7 +531,9 @@ router.route('/Votes/Gas/:PollId/:ProposalId')
     var client = new pg.Client(connectionsString)
     await client.connect()
     try {
-      var sqlReturn = await client.query('SELECT SUM(transactions.gas) FROM transactions INNER JOIN votes ON LOWER(votes.address) = LOWER(transactions.tx_sender) AND votes.voted_for_proposal = ' + req.params.ProposalId + ' AND votes.poll_id = ' + req.params.PollId + ';')
+      sqlStatement = 'SELECT SUM(transactions.gas) FROM transactions INNER JOIN votes ON LOWER(votes.address) = LOWER(transactions.tx_sender) AND votes.voted_for_proposal = $1 AND votes.poll_id = $2;'
+      param = [req.params.ProposalId, req.params.PollId]
+      var sqlReturn = await client.query(sqlStatement, param)
     } catch (err) {
       await client.end()
       console.error(err)
@@ -529,7 +541,9 @@ router.route('/Votes/Gas/:PollId/:ProposalId')
     }
 
     try {
-      var addressList = await client.query('SELECT address FROM votes WHERE poll_id = ' + req.params.PollId + ' AND voted_for_proposal = ' + req.params.ProposalId + ';')
+      sqlStatement = 'SELECT address FROM votes WHERE poll_id = $1 AND voted_for_proposal = $2;'
+      param = [req.params.PollId, req.params.ProposalId]
+      var addressList = await client.query(sqlStatement, param)
     } catch (err) {
       await client.end()
       console.error(err)
@@ -558,7 +572,9 @@ router.route('/Votes/Miner/:PollId/:ProposalId')
     var client = new pg.Client(connectionsString)
     await client.connect()
     try {
-      var sqlReturn = await client.query('SELECT SUM(difficulty) FROM block INNER JOIN votes ON votes.address = block.miner AND votes.voted_for_proposal = ' + req.params.ProposalId + ' AND votes.poll_id = ' + req.params.PollId + ' GROUP BY block.miner;')
+      sqlStatement = 'SELECT SUM(difficulty) FROM block INNER JOIN votes ON votes.address = block.miner AND votes.voted_for_proposal = $1 AND votes.poll_id = $2 GROUP BY block.miner;'
+      param = [req.params.ProposalId, req.params.PollId]
+      var sqlReturn = await client.query(sqlStatement, param)
     } catch (err) {
       await client.end()
       console.error(err)
