@@ -410,8 +410,10 @@ router.route('/Votes')
     await client.connect()
 
     //check if the address has gas spend to avoid db spaming
+    var sqlStatement = "SELECT SUM(gas_used) FROM transactions WHERE tx_sender = LOWER($1);"
+    var param = [addressNox]
     try {
-      var sqlAddressValue = await client.query("SELECT SUM(gas_used) FROM transactions WHERE tx_sender = LOWER('" + addressNox + "');")
+      var sqlAddressValue = await client.query(sqlStatement, param)
     } catch (err) {
       await client.end()
       console.error(err)
