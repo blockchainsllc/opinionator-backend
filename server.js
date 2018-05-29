@@ -519,7 +519,7 @@ router.route('/Votes/Gas/:PollId/:ProposalId')
     var client = new pg.Client(connectionsString)
     await client.connect()
     try {
-      var sqlReturn = await client.query('SELECT SUM(transactions.gas_used) FROM transactions INNER JOIN votes ON LOWER(votes.address) = LOWER(transactions.tx_sender) AND votes.voted_for_proposal = ' + req.params.ProposalId + ' AND votes.poll_id = ' + req.params.PollId + ';')
+      var sqlReturn = await client.query('SELECT SUM(transactions.gas) FROM transactions INNER JOIN votes ON LOWER(votes.address) = LOWER(transactions.tx_sender) AND votes.voted_for_proposal = ' + req.params.ProposalId + ' AND votes.poll_id = ' + req.params.PollId + ';')
     } catch (err) {
       await client.end()
       console.error(err)
