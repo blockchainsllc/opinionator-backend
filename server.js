@@ -588,6 +588,30 @@ router.route('/Votes/Miner/:PollId/:ProposalId')
 
   })
 
+
+router.route('/Votes/Dev/:PollId/:ProposalId')
+  //delivers the accumulated gas usage of all contracts and assigns it to the deployer address
+  //@devel could be done in one statement if someone can figure it out ;)
+  .get(async function(req, res) {
+    var client = new pg.Client(connectionsString)
+    await client.connect()
+    try {
+      sqlStatement = '; WITH i AS (SELECT DISTINCT trace.tx_hash, trace.trace_position, trace.gas_used, transactions.tx_sender FROM transactions INNER JOIN trace ON trace.send_to = transactions.creates INNER JOIN votes ON transactions.tx_sender = votes.address AND votes.voted_for_proposal = $1 AND votes.poll_id = $2) SELECT SUM(b.gas_used) - SUM(a.gas_used) FROM (SELECT SUM(trace.gas_used) AS gas_used, trace.tx_hash AS tx_hash FROM i INNER JOIN trace ON i.tx_hash = trace.tx_hash AND i.trace_position = trace.parent_trace_position GROUP BY trace.tx_hash ) AS a INNER JOIN i AS b ON a.tx_hash = b.tx_hash'
+      param = [req.params.ProposalId, req.params.PollId]
+      var sqlReturn = await client.query(sqlStatement, param)
+    } catch (err) {
+      await client.end()
+      console.error(err)
+      res.status(500).send('Database Error - Error Selecting!')
+    }
+
+    await client.end()
+    res.json({
+      gas_sum: sqlReturn.rows
+    })
+
+  })
+
 //REGISTER ROUTES
   // =================================
 
