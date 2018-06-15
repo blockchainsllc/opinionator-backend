@@ -17,7 +17,7 @@ var connectionsString = 'postgres://votingadmin:voting4slockit@localhost/voting'
 var Web3 = require('web3')
 var web3 = new Web3(Web3.givenProvider || "http://localhost:8555");
 const BN = require('bn.js');
-var pollContractAddress = '0x4502c02c652882a0a5da0ad6b09905f5a785ad6e'
+var pollContractAddress = '0x50ba2e417d573fcd67fab8ee5d6d764b105cd5f7'
 var pollContract = new web3.eth.Contract([{
   "constant": true,
   "inputs": [{
