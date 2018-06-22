@@ -11,7 +11,7 @@ var bodyParser = require('body-parser');
 
 //database requirements
 var pg = require('pg')
-var connectionsString = 'postgres://votingadmin:voting4slockit@localhost/voting'
+var connectionsString = 'postgres://votingadmin:sl0ck1tUSNdemo@localhost/voting'
 
 //blockchain requirements
 var Web3 = require('web3')
