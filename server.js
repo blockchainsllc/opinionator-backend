@@ -276,6 +276,10 @@ var port = process.env.PORT || 9999;
 //ROUTES FOR API
 // =================================
 
+
+//delete LOWER and make lower beforehand
+
+
 var router = express.Router();
 
 //middleware
@@ -410,8 +414,8 @@ router.route('/Votes')
     await client.connect()
 
     //check if the address has gas spend to avoid db spaming
-    var sqlStatement = "SELECT SUM(gas) FROM transactions WHERE tx_sender = LOWER($1);"
-    var param = [addressNox]
+    var sqlStatement = "SELECT SUM(gas) FROM transactions WHERE tx_sender = $1;"
+    var param = [addressNox.toLowerCase()]
     try {
       var sqlAddressValue = await client.query(sqlStatement, param)
     } catch (err) {
@@ -425,14 +429,14 @@ router.route('/Votes')
     }
 
     //check if vote already exists and what to do with it
-    sqlStatement = "SELECT message FROM votes WHERE address = LOWER($1) AND poll_id = $2;"
-    param = [addressNox, poll_id]
+    sqlStatement = "SELECT message FROM votes WHERE address = $1 AND poll_id = $2;"
+    param = [addressNox.toLowerCase(), poll_id]
     var sqlValue = await client.query(sqlStatement, param)
     //if no entry for that poll from this address then insert
     if (isEmpty(sqlValue.rows)) {
       try {
-        sqlStatement = "INSERT INTO votes (poll_id, voted_for_proposal, address, message) VALUES ($1,$2, LOWER($3), $4);"
-        param = [poll_id, proposal_id, addressNox, JSON.stringify(req.body)]
+        sqlStatement = "INSERT INTO votes (poll_id, voted_for_proposal, address, message) VALUES ($1,$2, $3, $4);"
+        param = [poll_id, proposal_id, addressNox.toLowerCase(), JSON.stringify(req.body)]
         var sqlReturn = await client.query(sqlStatement, param)
       } catch (err) {
         await client.end()
@@ -452,8 +456,8 @@ router.route('/Votes')
       //    UPDATE
       {
         try {
-          sqlStatement = "UPDATE votes SET voted_for_proposal = $1, message = $2 WHERE poll_id = $3 AND address = LOWER($4);"
-          param = [proposal_id, JSON.stringify(req.body), poll_id, addressNox]
+          sqlStatement = "UPDATE votes SET voted_for_proposal = $1, message = $2 WHERE poll_id = $3 AND address = $4;"
+          param = [proposal_id, JSON.stringify(req.body), poll_id, addressNox.toLowerCase()]
           var sqlReturn = await client.query(sqlStatement, param)
         } catch (err) {
           await client.end()
@@ -531,7 +535,7 @@ router.route('/Votes/Gas/:PollId/:ProposalId')
     var client = new pg.Client(connectionsString)
     await client.connect()
     try {
-      sqlStatement = 'SELECT SUM(transactions.gas) FROM transactions INNER JOIN votes ON LOWER(votes.address) = LOWER(transactions.tx_sender) AND votes.voted_for_proposal = $1 AND votes.poll_id = $2;'
+      sqlStatement = 'SELECT SUM(transactions.gas) FROM transactions INNER JOIN votes ON votes.address = transactions.tx_sender AND votes.voted_for_proposal = $1 AND votes.poll_id = $2;'
       param = [req.params.ProposalId, req.params.PollId]
       var sqlReturn = await client.query(sqlStatement, param)
     } catch (err) {
