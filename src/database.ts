@@ -153,9 +153,7 @@ export default class Database {
         } catch (err) {
             throw "Unable to query database: " + err;
         }
-
     }
-
 
     public async getAddressesForProposal(pollId: number, proposalId: number) : Promise<string[]> {
         const addresses: string[] = [];

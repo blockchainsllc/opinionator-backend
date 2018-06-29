@@ -123,7 +123,7 @@ router.route('/poll/:PollId')
         res.json(resultPolls)
     });
 
-router.route('/Proposal/:ProposalId')
+router.route('/proposal/:ProposalId')
     //return proposal by id (blockchain request)
     .get(async (req: Request, res: Response) => {
         const resultProposals: ProposalDto[] = [];
@@ -145,7 +145,7 @@ router.route('/Proposal/:ProposalId')
         res.json(resultProposals)
     });
 
-router.route('/Votes')
+router.route('/votes')
 //delivers all votes given (database request)
 //@developer should be considerd to be turned of to avoid to much data being send (limit to poll)
     .get(async (req: Request, res: Response) => {
@@ -274,7 +274,7 @@ router.route('/Votes/:PollId')
         }
     });
 
-router.route('/Votes/Gas/:PollId/:ProposalId')
+router.route('/votes/gas/:PollId/:ProposalId')
 //delivers the accumulated gas of all addresses that voted on specified proposal and the accumulated coin value of same proposal
     .get(async (req: Request, res: Response) => {
 
