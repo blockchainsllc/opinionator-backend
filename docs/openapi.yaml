@@ -2,7 +2,7 @@ openapi: "3.0.0"
 info:
   description: "This is the WebAPI for the Blockvote server"
   version: "1.0.0"
-  title: "BlockChain Voting WebAPI"
+  title: "Slock.it BlockChain Voting WebAPI"
   contact:
     email: "team@slock.it"
 
