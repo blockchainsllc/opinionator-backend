@@ -1,0 +1,358 @@
+openapi: "3.0.0"
+info:
+  description: "This is the WebAPI for the Blockvote server"
+  version: "1.0.0"
+  title: "BlockChain Voting WebAPI"
+  contact:
+    email: "team@slock.it"
+
+tags:
+  - name: "voting"
+    description: "Everything about voting"
+
+paths:
+  /:
+    get:
+      tags:
+      - "voting"
+      summary: "Default route"
+      description: "Prints a static welcom mesage"
+      responses:
+        200:
+          description: "ok"
+          content:
+            application/json:   
+              schema:
+                type: "object"
+                properties:
+                  message:
+                    type: "string"
+                    example: "Blockchain voting for the win!"
+                
+  /poll:
+    get:
+      tags:
+        - "voting"
+      summary: "Get list of all polls"
+      description: "Delivers a list of all polls from the blockchain"
+      responses:
+        200:
+          description: "ok"
+          content:
+            application/json: 
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/Poll"
+        500:
+          description: "unable to talk to blockchain"
+          content:
+            application/json: 
+              schema:
+                type: "string"
+                example: "Blockchain Error"
+                
+  /poll/{pollId}:
+    get:
+      tags:
+        - "voting"
+      summary: "Get poll by id"
+      description: "Delivers the poll with the requested id from the blockchain"
+      parameters: 
+        - name: "pollId"
+          in: "path"
+          description: "ID of poll to return"
+          required: true
+          schema:
+            type: "integer"
+      responses:
+        200:
+          description: "ok"
+          content:
+            application/json: 
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/Poll"
+        500:
+          description: "unable to talk to blockchain"
+          content:
+            application/json: 
+              schema:
+                type: "string"
+                example: "Blockchain Error"
+  /proposal/{proposalId}:
+    get:
+      tags:
+        - "voting"
+      summary: "Get proposal by id"
+      description: "Delivers the proposal with the requested id from the blockchain"
+      parameters: 
+        - name: "proposalId"
+          in: "path"
+          description: "ID of proposalId to return"
+          required: true
+          schema:
+            type: "integer"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json: 
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/Proposal"
+              
+        500:
+          description: "unable to talk to blockchain"
+          content:
+            application/json: 
+              schema:
+                type: "string"
+                example: "Blockchain Error"        
+  /votes:
+    get:
+      tags:
+        - "voting"
+      summary: "Get all votes"
+      description: "Delivers all votes from the database"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json: 
+              schema:
+                type: "array"
+                items: 
+                  $ref: "#/components/schemas/Vote"
+              
+
+        500:
+          description: "unable to talk to database"
+          content:
+            application/json: 
+              schema:
+                type: "string"
+                example: "Database Error"
+    post:
+      tags:
+        - "voting"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewVote"
+      responses:
+        200:
+          description: OK
+  
+  /votes/{pollId}:
+    get:
+      tags:
+        - "voting"
+      summary: "delivers all votes for the poll with given id"
+      parameters:
+        - name: "pollId"
+          in: "path"
+          description: "ID of poll to return"
+          required: true
+          schema:
+            type: "integer"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/Vote"
+        500:
+          description: "Unable to talk to database"
+          content:
+            application/json:
+              schema:
+                type: "string"
+                example: "Database Error"
+                
+  /votes/gas/{pollId}/{proposalId}:
+    get:
+      tags:
+        - "voting"
+      summary: "get gas and coins for proposal"
+      description: "delivers the accumulated gas of all addresses that voted on specified proposal and the accumulated coin value of same proposal"
+      parameters:
+        - name: "pollId"
+          in: "path"
+          description: "ID of poll to return"
+          required: true
+          schema:
+            type: "integer"
+        - name: "proposalId"
+          in: "path"
+          description: "ID of proposal to return"
+          required: true
+          schema:
+            type: "integer"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties: 
+                  gas_sum:
+                    type: "number"
+                    description: "Amount of accumulated gas"
+                  coin_sum:
+                    type: "number"
+                    description: "Balance sum of all addresses voted for the proposal"
+        500:
+          description: "Unable to talk to database"
+          content:
+            application/json:
+              schema:
+                type: "string"
+                example: "Database Error"
+
+  /votes/miner/{pollId}/{proposalId}:
+    get:
+      tags:
+        - "voting"
+      summary: "get difficulty for proposal"
+      description: "delivers the accumulated difficulty solved of all miners that voted on specified proposal"
+      parameters:
+        - name: "pollId"
+          in: "path"
+          description: "ID of poll to return"
+          required: true
+          schema:
+            type: "integer"
+        - name: "proposalId"
+          in: "path"
+          description: "ID of proposal to return"
+          required: true
+          schema:
+            type: "integer"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties: 
+                  gas_sum:
+                    type: "number"
+                    description: "Amount of accumulated difficulty"
+                  
+        500:
+          description: "Unable to talk to database"
+          content:
+            application/json:
+              schema:
+                type: "string"
+                example: "Database Error"
+
+  /votes/dev/{pollId}/{proposalId}:
+    get:
+      tags:
+        - "voting"
+      summary: "get gas usage proposal"
+      description: "delivers the accumulated gas usage of all contracts and assigns it to the deployer address"
+      parameters:
+        - name: "pollId"
+          in: "path"
+          description: "ID of poll to return"
+          required: true
+          schema:
+            type: "integer"
+        - name: "proposalId"
+          in: "path"
+          description: "ID of proposal to return"
+          required: true
+          schema:
+            type: "integer"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties: 
+                  gas_sum:
+                    type: "number"
+                    description: "Amount of accumulated gas"
+                  
+        500:
+          description: "Unable to talk to database"
+          content:
+            application/json:
+              schema:
+                type: "string"
+                example: "Database Error"
+
+components:
+  schemas:
+    NewVote:
+      type: "object"
+      properties:
+        signature:
+          type: "string"
+        message:
+          type: "object"
+          properties:
+            poll_id:
+              type: "number"
+            proposal_id:
+              type: "number"
+            pollContractAddress:
+              type: "string"
+          
+    Proposal:
+      type: "object"
+      properties:
+        pollId:
+          type: "number"
+        author:
+          type: "string"
+        name:
+          type: "string"
+        description:
+          type: "string"
+    Poll:
+      type: "object"
+      properties:
+        author:
+          type: "string"
+        allowProposalUpdate:
+          type: "boolean"
+        startDate:
+          type: "string"
+        endDate:
+          type: "string"
+        votingChoice:
+          type: "string"
+    Vote:
+      type: "object"
+      properties:
+        voteId:
+          type: "number"
+        pollId:
+          type: "number"
+        proposalId:
+          type: "number"
+        timestamp:
+          type: "string"
+        voterAddress:
+          type: "string"
+          format: "blockchain address"
+        message:
+          type: "string"
+        isValid:
+          type: "boolean"
+    
