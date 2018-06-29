@@ -1,277 +1,39 @@
-//The server that runs the api
+/* Blockchain Voting -- Backend */
+const express = require('express');
+const app = express();
+const bodyParser = require('body-parser');
+const fs = require('fs');
+const Web3 = require('web3')
+const { Pool } = require('pg')
+const BN = require('bn.js');
 
+//Get configuration from environment
+const dbhost = process.env.DB_HOST || 'locahost';
+const dbuser = process.env.DB_USER || 'votingadmin';
+const dbpw = process.env.DB_PASSWORD || 'sl0ck1tUSNdemo';
+const contractAddress = process.env.CONTRACT_ADDR || '0x50ba2e417d573fcd67fab8ee5d6d764b105cd5f7';
+const srvPort = process.env.PORT || 9999;
 
-//BASE SETUP
-// =================================
-
-//server requirements
-var express = require('express');
-var app = express();
-var bodyParser = require('body-parser');
-
-//database requirements
-var pg = require('pg')
-var connectionsString = 'postgres://votingadmin:sl0ck1tUSNdemo@localhost/voting'
+const connectionsString = `postgres://${dbuser}:${dbpw}@${dbhost}/voting`;
 
 //blockchain requirements
-var Web3 = require('web3')
-var web3 = new Web3(Web3.givenProvider || "http://localhost:8545");
-const BN = require('bn.js');
-var pollContractAddress = '0x50ba2e417d573fcd67fab8ee5d6d764b105cd5f7'
-var pollContract = new web3.eth.Contract([{
-  "constant": true,
-  "inputs": [{
-    "name": "",
-    "type": "uint256"
-  }],
-  "name": "proposals",
-  "outputs": [{
-    "name": "name",
-    "type": "string"
-  }, {
-    "name": "description",
-    "type": "string"
-  }, {
-    "name": "author",
-    "type": "address"
-  }, {
-    "name": "pollId",
-    "type": "uint256"
-  }, {
-    "name": "activated",
-    "type": "bool"
-  }],
-  "payable": false,
-  "stateMutability": "view",
-  "type": "function"
-}, {
-  "constant": false,
-  "inputs": [{
-    "name": "_proposalName",
-    "type": "string"
-  }, {
-    "name": "_proposalDescription",
-    "type": "string"
-  }, {
-    "name": "_pollId",
-    "type": "uint256"
-  }],
-  "name": "createProposal",
-  "outputs": [],
-  "payable": false,
-  "stateMutability": "nonpayable",
-  "type": "function"
-}, {
-  "constant": true,
-  "inputs": [{
-    "name": "_pollId",
-    "type": "uint256"
-  }],
-  "name": "getPoll",
-  "outputs": [{
-    "components": [{
-      "name": "name",
-      "type": "string"
-    }, {
-      "name": "description",
-      "type": "string"
-    }, {
-      "name": "proposalIds",
-      "type": "uint256[]"
-    }, {
-      "name": "author",
-      "type": "address"
-    }, {
-      "name": "allowProposalUpdate",
-      "type": "bool"
-    }, {
-      "name": "startDate",
-      "type": "uint256"
-    }, {
-      "name": "endDate",
-      "type": "uint256"
-    }, {
-      "name": "votingChoice",
-      "type": "uint8"
-    }],
-    "name": "",
-    "type": "tuple"
-  }],
-  "payable": false,
-  "stateMutability": "view",
-  "type": "function"
-}, {
-  "constant": false,
-  "inputs": [{
-    "name": "_name",
-    "type": "string"
-  }, {
-    "name": "_description",
-    "type": "string"
-  }, {
-    "name": "_startDate",
-    "type": "uint256"
-  }, {
-    "name": "_endDate",
-    "type": "uint256"
-  }, {
-    "name": "_votingChoice",
-    "type": "uint8"
-  }],
-  "name": "createPoll",
-  "outputs": [],
-  "payable": false,
-  "stateMutability": "nonpayable",
-  "type": "function"
-}, {
-  "constant": false,
-  "inputs": [{
-    "name": "_proposalId",
-    "type": "uint256"
-  }, {
-    "name": "_pollId",
-    "type": "uint256"
-  }],
-  "name": "addProposalToPoll",
-  "outputs": [],
-  "payable": false,
-  "stateMutability": "nonpayable",
-  "type": "function"
-}, {
-  "constant": true,
-  "inputs": [{
-    "name": "",
-    "type": "uint256"
-  }],
-  "name": "polls",
-  "outputs": [{
-    "name": "name",
-    "type": "string"
-  }, {
-    "name": "description",
-    "type": "string"
-  }, {
-    "name": "author",
-    "type": "address"
-  }, {
-    "name": "allowProposalUpdate",
-    "type": "bool"
-  }, {
-    "name": "startDate",
-    "type": "uint256"
-  }, {
-    "name": "endDate",
-    "type": "uint256"
-  }, {
-    "name": "votingChoice",
-    "type": "uint8"
-  }],
-  "payable": false,
-  "stateMutability": "view",
-  "type": "function"
-}, {
-  "constant": true,
-  "inputs": [{
-    "name": "_pollId",
-    "type": "uint256"
-  }],
-  "name": "getProposalsFromPoll",
-  "outputs": [{
-    "name": "",
-    "type": "uint256[]"
-  }],
-  "payable": false,
-  "stateMutability": "view",
-  "type": "function"
-}, {
-  "constant": true,
-  "inputs": [],
-  "name": "getPollAmount",
-  "outputs": [{
-    "name": "",
-    "type": "uint256"
-  }],
-  "payable": false,
-  "stateMutability": "view",
-  "type": "function"
-}, {
-  "constant": true,
-  "inputs": [{
-    "name": "_proposalId",
-    "type": "uint256"
-  }],
-  "name": "getProposal",
-  "outputs": [{
-    "name": "",
-    "type": "string"
-  }, {
-    "name": "",
-    "type": "string"
-  }, {
-    "name": "",
-    "type": "address"
-  }, {
-    "name": "",
-    "type": "uint256"
-  }],
-  "payable": false,
-  "stateMutability": "view",
-  "type": "function"
-}, {
-  "anonymous": false,
-  "inputs": [{
-    "indexed": false,
-    "name": "proposalId",
-    "type": "uint256"
-  }, {
-    "indexed": false,
-    "name": "proposalAuthor",
-    "type": "address"
-  }, {
-    "indexed": false,
-    "name": "pollId",
-    "type": "uint256"
-  }],
-  "name": "LogCreateProposal",
-  "type": "event"
-}, {
-  "anonymous": false,
-  "inputs": [{
-    "indexed": false,
-    "name": "pollId",
-    "type": "uint256"
-  }, {
-    "indexed": false,
-    "name": "pollAuthor",
-    "type": "address"
-  }],
-  "name": "LogCreatePoll",
-  "type": "event"
-}, {
-  "anonymous": false,
-  "inputs": [{
-    "indexed": false,
-    "name": "pollId",
-    "type": "uint256"
-  }, {
-    "indexed": false,
-    "name": "proposalId",
-    "type": "uint256"
-  }, {
-    "indexed": false,
-    "name": "proposalAuthor",
-    "type": "address"
-  }],
-  "name": "LogProposalActivated",
-  "type": "event"
-}], pollContractAddress)
 
+const web3 = new Web3(Web3.givenProvider || "http://localhost:8545");
+
+const pollContractAddress = contractAddress;
+
+//Load contract from file
+const contract = JSON.parse(fs.readFileSync('poll-contract.json'));
+const pollContract = new web3.eth.Contract(contract, pollContractAddress)
+
+
+
+
+// Prepare HTTP API
 app.use(bodyParser.urlencoded({
   extended: true
 }));
 app.use(bodyParser.json());
-
-var port = process.env.PORT || 9999;
 
 //ROUTES FOR API
 // =================================
@@ -280,7 +42,7 @@ var port = process.env.PORT || 9999;
 //delete LOWER and make lower beforehand
 
 
-var router = express.Router();
+const router = express.Router();
 
 //middleware
 router.use(async function(req, res, next) {
@@ -374,7 +136,7 @@ router.route('/Votes')
     var client = new pg.Client(connectionsString)
     await client.connect()
     try {
-      var sqlReturn = await client.query('SELECT * FROM votes;')
+      var sqlReturn = await client.query('SELECT * FROM votes;') // TODO: why select *?
     } catch (err) {
       await client.end()
       console.error(err)
@@ -391,7 +153,6 @@ router.route('/Votes')
     var poll_id = messageObject.poll_id
     var proposal_id = messageObject.proposal_id
     var contract_address = messageObject.pollContractAddress
-    var signature = req.body.signature
 
     //check if the contract in the passed message is supported by slockit
     if (contract_address.localeCompare(pollContractAddress) != 0) {
@@ -410,7 +171,7 @@ router.route('/Votes')
     //delete 0x (for database use)
     addressNox = address.substring(2)
 
-    var client = new pg.Client(connectionsString)
+    var client = new pg.Client(connectionsString) // TODO: switch to connection pooling
     await client.connect()
 
     //check if the address has gas spend to avoid db spaming
@@ -624,9 +385,8 @@ app.use('/api', router);
 //START THE SERVER
 // =================================
 
-app.listen(port);
+app.listen(srvPort);
 console.log('stuff happens');
-
 
 
 function isEmpty(obj) {
