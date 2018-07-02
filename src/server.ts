@@ -24,7 +24,7 @@ const web3 = new Web3(Web3.givenProvider || "http://localhost:8545");
 const pollContractAddress = contractAddress;
 
 //Load contract from file
-const contract = JSON.parse(fs.readFileSync('poll-contract.json').toString());
+const contract = JSON.parse(fs.readFileSync('./data/poll-contract.json').toString());
 const pollContract = new web3.eth.Contract(contract, pollContractAddress);
 
 function log(msg: string, level: string = "info") {
@@ -364,5 +364,5 @@ app.use('/api', router);
 // =================================
 
 app.listen(srvPort);
-log('stuff happens','info');
+log('Blockchain Backend running on ' + srvPort,'info');
 

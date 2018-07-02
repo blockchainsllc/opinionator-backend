@@ -1,7 +1,7 @@
-FROM node:alpine
+FROM node:8-alpine
 
 WORKDIR /app
 EXPOSE 9999
-COPY ./build /app
-RUN cd /app && npm install
-CMD [ "npm", "start" ]
+COPY ./ /app
+
+CMD [ "node", "./build/server.js" ]
