@@ -8,19 +8,32 @@ To view the OpenAPI documentation:
 2.  Copy'n'paste the content of `docs/openapi.yaml` into the editor
 3.  Enjoy!
 
-## Build/run
+## Build/run with docker
 
 To build this as a docker image run:
 
-1.  `npm install`
-2.  `tsc`
-3.  `docker build -t blockchain-voting-backend .`
+`docker build -t blockchain-voting-backend .`
 
 To run it on docker:
 
 `docker run -it --rm --init -p 9999:9999 blockchain-voting-backend`
 
 It'll listen on port `TCP 9999` for http requests. `CTRL-C` to stop it.
+
+## Build/run old-fashioned
+
+Make sure to have installed:
+
+-   NodeJS (current LTS recommendeD)
+-   TypeScript `npm install -g typescript`
+-   The ability to build `node-gyp` modules
+
+To build:
+
+1.  `npm install`
+2.  `tsc`
+
+To run: `node ./build/server.js`
 
 ## Configuration
 
