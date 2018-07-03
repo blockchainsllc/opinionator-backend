@@ -1,0 +1,16 @@
+sudo: required
+
+services:
+  - docker
+
+jobs:
+  include:
+    - stage: build docker image
+      script:
+        - docker build -t blockchain-voting-backend .
+
+    - stage: push to docker hub
+      script:
+        - echo "Would have pushed"
+
+
