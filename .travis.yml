@@ -6,12 +6,17 @@ services:
 - docker
 jobs:
   include:
-  - stage: build docker image
+  - stage: build docker image and push
     script:
-    - docker build -t blockchain-voting-backend .
-  - stage: push to docker hub
+	- echo "$DOCKER_SECRET" | docker login -u markuskeil --password-stdin
+	- docker build -t slockit/blockchain-voting-backend:$TRAVIS_BRANCH .
+	- docker push slockit/blockchain-voting-backend:$TRAVIS_BRANCH
+	
+  - stage: tag as latest
     script:
-    - echo "Would have pushed"
+	- echo "$DOCKER_SECRET" | docker login -u markuskeil --password-stdin
+	- docker pull slockit/blockchain-voting-backend:$TRAVIS_BRANCH
+	- docker tag slockit/blockchain-voting-backend:$TRAVIS_BRANCH slockit/blockchain-voting-backend:latest
 env:
   matrix:
     secure: BxVwgg9ip0OtKN8hQmKJ5pYtOzl/yhYYE+xa5js6BjkkK1pOABaDrMfid4mKAc/mT1NKZfscdSr0oDz/B+VPwVDLA4MUq91GNcjdGuUP+hNG7NJlvPG3eogyJPyK7MISFpDig5sygrjvLlleqwldy89ylCpi2mNgpsOHy2kKuFNFblsR1DYSQ5cGbqto4aLwkMcxNWXySU+PR6S9kkIquD3WaldfkJZTd09MqEFY93v9oRLpOW1bMcN2mosEOrNdSL/SShea9GYL6QKYz3cVCvhcr+4nXzkX/hcv7mpTRriVBvslrOSNv+xFg3cJdo38Q8R3qUXoutVyemSCQ+64ZtIlGV/2d0q5ExvWAMh9XTlHdX6oAGEy/b3iuo2IYxET9Y/3YoWbRfd/ugLKfBjj93z6b4KhoZsv8Z/Wm+y7knojtmx8Gd+lMCvLS+mSmlebOQt0gL6LzBYyoe/SgNRMur506P8HpOzTZ/aHrZ6O+I/gea76ZXVxHHxbmXzZAPrGgY+3duiMEB1O+02LI+kenSgRMPTz3QQkrqnGNPrljTIQ/cTIELHVbO2dsStjOAPxcaJHf3UbFE/ubNW5/dR3vBD8LDviBmFhq05XJ5mLoOz4/Bb++hjn9yLq9lZfplROuRejklaOCaxfHA3W8v7LxlkZw3+CBhECgi0VgDW59tk=
