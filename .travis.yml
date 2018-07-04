@@ -6,8 +6,7 @@ services:
 stages:
   - build
   - name: deploy
-    if: tag = true
-
+    if: tag IS present
 
 jobs:
   include:
