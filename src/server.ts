@@ -50,6 +50,10 @@ app.use(bodyParser.json());
 
 //delete LOWER and make lower beforehand
 
+function error(msg: string) : string {
+    return JSON.stringify({status:"error",message:msg});
+}
+
 
 const router: Router = Router();
 
@@ -94,7 +98,8 @@ router.route('/poll')
             }
         } catch (err) {
             log(err,'error');
-            res.status(500).send('Blockchain Error');
+            res.status(500).send(error('Blockchain Error'));
+            return;
         }
 
         res.json(resultPolls);
@@ -118,7 +123,8 @@ router.route('/poll/:PollId')
             });
         } catch (err) {
             console.error(err);
-            res.status(500).send("Blockchain Error")
+            res.status(500).send(error("Blockchain Error"));
+            return;
         }
 
         res.json(resultPolls)
@@ -140,7 +146,8 @@ router.route('/proposal/:ProposalId')
             });
         } catch (err) {
             log(err,'error');
-            res.status(500).send("Blockchain Error");
+            res.status(500).send(error("Blockchain Error"));
+            return;
         }
 
         res.json(resultProposals)
@@ -156,7 +163,8 @@ router.route('/votes')
             dbVotes = await db.getAllVotes();
         } catch (err) {
             log(err,'error');
-            res.status(500).send('Database Error');
+            res.status(500).send(error('Database Error'));
+            return;
         }
         res.json(dbVotes);
     })
@@ -171,7 +179,7 @@ router.route('/votes')
 
         //check if the contract in the passed message is supported by slockit
         if (contract_address.localeCompare(pollContractAddress) != 0) {
-            res.status(400).send("Unsupported Contract!");
+            res.status(400).send(error("Unsupported Contract!"));
             log("Unsupported contract",'error');
             return;
         }
@@ -182,7 +190,8 @@ router.route('/votes')
             address = await web3.eth.accounts.recover(req.body.message, req.body.signature)
         } catch (err) {
             log(err,"error");
-            res.status(500).send('Invalid message format!');
+            res.status(500).send(error('Invalid message format!'));
+            return;
         }
 
         //delete 0x (for database use)
@@ -192,14 +201,15 @@ router.route('/votes')
             const gasSumForAddress: number = await db.getGasSumForAddress(addressNox);
 
             if(gasSumForAddress === -1) {
-                res.status(400).send("Unused Addresses are not supported!");
+                res.status(400).send(error("Unused Addresses are not supported!"));
                 log("Unused address used", 'warn');
                 return;
             }
 
         } catch(err) {
             log(err, 'error');
-            res.status(500).send('Database Error');
+            res.status(500).send(error('Database Error'));
+            return;
         }
 
         const voteExists = await db.checkVoteExists(poll_id,address);
@@ -214,7 +224,8 @@ router.route('/votes')
                 });
             } catch (err) {
                 log("Unable to check vote:" + err, 'error');
-                res.status(500).send('Database error');
+                res.status(500).send(error('Database error'));
+                return;
             }
         } else {
             //check contract on how the poll is supposed to react if the address already voted
@@ -229,7 +240,8 @@ router.route('/votes')
                     });
                 } catch (err) {
                     log(err, 'error');
-                    res.status(500).send('Database Error - Error Updating your Vote!');
+                    res.status(500).send(error('Database Error - Error Updating your Vote!'));
+                    return;
                 }
             } else if (pollObject.votingChoice == 1) {// useOldestVote
                 res.json({
@@ -250,11 +262,13 @@ router.route('/votes')
 
                 } catch (err) {
                     log("Unable to update vote: " + err,'error');
-                    res.status(500).send('Database Error - Error Updating your Vote!');
+                    res.status(500).send(error('Database Error - Error Updating your Vote!'));
+                    return;
                 }
             } else {
                 res.json({
-                    message: "error - contract voting behaviour not supported",
+                    status:'error',
+                    message: "contract voting behaviour not supported",
                     successfullyVoted: false
                 })
             }
@@ -271,7 +285,8 @@ router.route('/Votes/:PollId')
             res.json(votes);
         } catch (err) {
             log(err,'error');
-            res.status(500).send('Database Error - Error Selecting!')
+            res.status(500).send(error('Database Error - Error Selecting!'));
+            return;
         }
     });
 
@@ -287,7 +302,8 @@ router.route('/votes/gas/:PollId/:ProposalId')
             accumulatedGas = await db.getTotalTrxGasForProposal(pollId, proposalId);
         } catch (err) {
             log(err, 'error');
-            res.status(500).send('Database Error - Error Selecting!')
+            res.status(500).send(error('Database Error - Error Selecting!'));
+            return;
         }
 
         let addresses: string[] = [];
@@ -295,7 +311,8 @@ router.route('/votes/gas/:PollId/:ProposalId')
             addresses = await db.getAddressesForProposal(pollId, proposalId);
         } catch (err) {
             log(err,'error');
-            res.status(500).send('Database Error - Error Selecting!')
+            res.status(500).send(error('Database Error - Error Selecting!'));
+            return;
         }
 
         let sum = new BN(0);
@@ -324,7 +341,8 @@ router.route('/Votes/Miner/:PollId/:ProposalId')
             totalDifficulty = await db.getTotalDifficultyForProposal(pollId, proposalId);
         } catch (err) {
             log(err,'error');
-            res.status(500).send('Database Error - Error Selecting!')
+            res.status(500).send(error('Database Error - Error Selecting!'));
+            return;
         }
 
         res.json({
@@ -347,7 +365,8 @@ router.route('/Votes/Dev/:PollId/:ProposalId')
             accumulatedGas = await db.getTotalContractGasForProposal(pollId, proposalId);
         } catch (err) {
             log(err,'error');
-            res.status(500).send('Database Error - Error Selecting!')
+            res.status(500).send(error('Database Error - Error Selecting!'));
+            return;
         }
 
         res.json({
