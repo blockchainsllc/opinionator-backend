@@ -23,12 +23,12 @@ export default class Database {
 
             dbResultRows.rows.forEach(row => {
                  resultVotes.push({
-                     voteId: row[0],
-                     pollId: row[1],
-                     proposalId: row[2],
-                     timestamp: row[3],
-                     voterAddress: row[4],
-                     message: row[5],
+                     voteId: row.id,
+                     pollId: row.poll_id,
+                     proposalId: row.voted_for_proposal,
+                     timestamp: row.timestamp,
+                     voterAddress: row.address,
+                     message: row.message,
                      isValid: true
                  });
             });
@@ -48,12 +48,12 @@ export default class Database {
 
             dbResultRows.rows.forEach(row => {
                 resultVotes.push({
-                    voteId: row[0],
+                    voteId: row.id,
                     pollId: pollId,
-                    proposalId: row[1],
-                    timestamp: row[2],
-                    voterAddress: row[3],
-                    message: row[4],
+                    proposalId: row.voted_for_proposal,
+                    timestamp: row.timestamp,
+                    voterAddress: row.address,
+                    message: row.message,
                     isValid: true
                 });
             });
@@ -68,11 +68,11 @@ export default class Database {
     public async getGasSumForAddress(address: string) : Promise<number> {
         let gasSum: number = 0;
 
-        const qry: string = "SELECT SUM(gas) FROM transactions WHERE tx_sender = $1";
+        const qry: string = "SELECT SUM(gas) as gas FROM transactions WHERE tx_sender = $1";
         try {
             const dbResultRows = await this.dbPool.query(qry,[address.toLowerCase()]);
             if(dbResultRows.rowCount > 0) {
-                gasSum = parseInt(dbResultRows.rows[0][0]);
+                gasSum = parseInt(dbResultRows.rows[0].gas);
             } else {
                 gasSum = -1;
             }
@@ -84,10 +84,10 @@ export default class Database {
     }
 
     public async checkVoteExists(pollId: number, address: string) :Promise<boolean> {
-        const qry: string = "SELECT count(poll_id) FROM votes WHERE address = $1 AND poll_id = $2";
+        const qry: string = "SELECT count(poll_id) as ct FROM votes WHERE address = $1 AND poll_id = $2";
         try {
             const dbResultRows = await this.dbPool.query(qry,[address.toLowerCase(),pollId]);
-            return dbResultRows.rowCount > 0;
+            return dbResultRows.rows[0].ct > 0;
         } catch(err) {
             throw "Unable to query database: " + err;
         }
@@ -112,11 +112,11 @@ export default class Database {
     }
 
     public async getTotalTrxGasForProposal(pollId: number, proposalId: number) : Promise<number> {
-        const qry: string = "SELECT SUM(transactions.gas) FROM transactions INNER JOIN votes ON votes.address = transactions.tx_sender AND votes.voted_for_proposal = $1 AND votes.poll_id = $2";
+        const qry: string = "SELECT SUM(transactions.gas) as gas FROM transactions INNER JOIN votes ON votes.address = transactions.tx_sender AND votes.voted_for_proposal = $1 AND votes.poll_id = $2";
         try {
             const dbResultRows = await this.dbPool.query(qry, [proposalId,pollId]);
             if(dbResultRows.rowCount > 0) {
-                return parseInt(dbResultRows.rows[0][0]);
+                return parseInt(dbResultRows.rows[0].gas);
             } else {
                 return 0;
             }
@@ -126,11 +126,11 @@ export default class Database {
     }
 
     public async getTotalDifficultyForProposal(pollId: number, proposalId: number) : Promise<number> {
-        const qry: string = "SELECT SUM(difficulty) FROM block INNER JOIN votes ON votes.address = block.miner AND votes.voted_for_proposal = $1 AND votes.poll_id = $2 GROUP BY block.miner";
+        const qry: string = "SELECT SUM(difficulty) as difficulty FROM block INNER JOIN votes ON votes.address = block.miner AND votes.voted_for_proposal = $1 AND votes.poll_id = $2 GROUP BY block.miner";
         try {
             const dbResultRows = await this.dbPool.query(qry, [proposalId,pollId]);
             if(dbResultRows.rowCount > 0) {
-                return parseInt(dbResultRows.rows[0][0]);
+                return parseInt(dbResultRows.rows[0].difficulty);
             } else {
                 return 0;
             }
@@ -146,7 +146,7 @@ export default class Database {
         try {
             const dbResultRows = await this.dbPool.query(qry,[proposalId, pollId]);
             if(dbResultRows.rowCount > 0) {
-                return parseInt(dbResultRows.rows[0][0]);
+                return parseInt(dbResultRows.rows[0].i);
             } else {
                 return 0;
             }
@@ -161,7 +161,7 @@ export default class Database {
         try {
             const dbResultRows = await this.dbPool.query(qry,[pollId,proposalId]);
             dbResultRows.rows.forEach(row => {
-                 addresses.push(row[0]);
+                 addresses.push(row.address);
             });
 
         } catch (err) {
