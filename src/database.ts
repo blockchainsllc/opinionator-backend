@@ -18,7 +18,7 @@ export default class Database {
     public async getAllVotes() : Promise<Vote[]> {
         const resultVotes: Vote[] = [];
         try {
-            const qry: string = "SELECT vote_id, poll_id, voted_for_proposal, timestamp, address, message, is_valid FROM votes";
+            const qry: string = "SELECT id, poll_id, voted_for_proposal, timestamp, address, message FROM votes";
             const dbResultRows = await this.dbPool.query(qry);
 
             dbResultRows.rows.forEach(row => {
@@ -29,7 +29,7 @@ export default class Database {
                      timestamp: row[3],
                      voterAddress: row[4],
                      message: row[5],
-                     isValid: row[6]
+                     isValid: true
                  });
             });
 
@@ -43,7 +43,7 @@ export default class Database {
     public async getVotesForPoll(pollId: number) : Promise<Vote[]> {
         const resultVotes: Vote[] = [];
         try {
-            const qry: string = "SELECT vote_id, voted_for_proposal, timestamp, address, message FROM votes WHERE poll_id = $1 AND is_valid = TRUE";
+            const qry: string = "SELECT id, voted_for_proposal, timestamp, address, message FROM votes WHERE poll_id = $1";
             const dbResultRows = await this.dbPool.query(qry,[pollId]);
 
             dbResultRows.rows.forEach(row => {
@@ -94,7 +94,7 @@ export default class Database {
     }
 
     public async createVote(pollId: number, proposalId: number, address: string, message: string) : Promise<void> {
-        const qry: string = "INSERT INTO votes (poll_id, voted_for_proposal, address, message, is_valid) VALUES ($1,$2, $3, $4, TRUE)";
+        const qry: string = "INSERT INTO votes (poll_id, voted_for_proposal, address, message) VALUES ($1,$2, $3, $4)";
         try {
             await this.dbPool.query(qry,[pollId,proposalId,address.toLowerCase(),message]);
         } catch(err) {
@@ -103,16 +103,16 @@ export default class Database {
     }
 
     public async updateVote(pollId: number, proposalId: number, address: string, message: string, isValidVote: boolean) : Promise<void> {
-        const qry: string = "UPDATE votes SET voted_for_proposal = $1, message = $2, is_valid = $5 WHERE poll_id = $3 AND address = $4";
+        const qry: string = "UPDATE votes SET voted_for_proposal = $1, message = $2 WHERE poll_id = $3 AND address = $4";
         try {
-            await this.dbPool.query(qry,[proposalId,message,pollId,address.toLowerCase(), isValidVote])
+            await this.dbPool.query(qry,[proposalId,message,pollId,address.toLowerCase()])
         } catch(err) {
             throw "Unable to query database: " + err;
         }
     }
 
     public async getTotalTrxGasForProposal(pollId: number, proposalId: number) : Promise<number> {
-        const qry: string = "SELECT SUM(transactions.gas) FROM transactions INNER JOIN votes ON votes.address = transactions.tx_sender AND votes.is_valid = TRUE AND votes.voted_for_proposal = $1 AND votes.poll_id = $2";
+        const qry: string = "SELECT SUM(transactions.gas) FROM transactions INNER JOIN votes ON votes.address = transactions.tx_sender AND votes.voted_for_proposal = $1 AND votes.poll_id = $2";
         try {
             const dbResultRows = await this.dbPool.query(qry, [proposalId,pollId]);
             if(dbResultRows.rowCount > 0) {
@@ -126,7 +126,7 @@ export default class Database {
     }
 
     public async getTotalDifficultyForProposal(pollId: number, proposalId: number) : Promise<number> {
-        const qry: string = "SELECT SUM(difficulty) FROM block INNER JOIN votes ON votes.address = block.miner AND votes.is_valid = TRUE AND votes.voted_for_proposal = $1 AND votes.poll_id = $2 GROUP BY block.miner";
+        const qry: string = "SELECT SUM(difficulty) FROM block INNER JOIN votes ON votes.address = block.miner AND votes.voted_for_proposal = $1 AND votes.poll_id = $2 GROUP BY block.miner";
         try {
             const dbResultRows = await this.dbPool.query(qry, [proposalId,pollId]);
             if(dbResultRows.rowCount > 0) {
