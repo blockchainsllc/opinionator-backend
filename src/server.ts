@@ -17,7 +17,7 @@ const srvPort: number = parseInt(process.env.PORT ? process.env.PORT : '9999') |
 const parityRpc: string = process.env.RPC_URL || 'http://localhost:8545';
 
 //Prepare DB
-const db = new Database(dbhost, dbuser, dbpw, 'voting', srvPort);
+const db = new Database(dbhost, dbuser, dbpw, 'voting', 5432);
 
 //blockchain requirements
 const web3 = new Web3(parityRpc);
