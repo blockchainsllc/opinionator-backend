@@ -12,4 +12,5 @@ RUN cd /app && npm install && tsc
 
 FROM node:8-alpine
 COPY --from=build /app /app
+WORKDIR /app
 CMD [ "node", "./build/server.js" ]
