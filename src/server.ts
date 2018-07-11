@@ -9,12 +9,12 @@ const Web3 = require('web3');
 const BN = require('bn.js');
 
 //Get configuration from environment
-const dbhost: string = process.env.DB_HOST || 'localhost';
+const dbhost: string = process.env.DB_HOST || '10.142.1.12';
 const dbuser: string = process.env.DB_USER || 'votingadmin';
 const dbpw: string = process.env.DB_PASSWORD || 'sl0ck1tUSNdemo';
 const contractAddress: string = process.env.CONTRACT_ADDR || '0x50ba2e417d573fcd67fab8ee5d6d764b105cd5f7';
 const srvPort: number = parseInt(process.env.PORT ? process.env.PORT : '9999') || 9999;
-const parityRpc: string = process.env.RPC_URL || 'http://localhost:8545';
+const parityRpc: string = process.env.RPC_URL || 'http://10.142.1.10:8545';
 
 //Prepare DB
 const db = new Database(dbhost, dbuser, dbpw, 'voting', 5432);
@@ -316,10 +316,10 @@ router.route('/votes/gas/:PollId/:ProposalId')
         }
 
         let sum = new BN(0);
-        addresses.forEach( async addr => {
+        for(const addr of addresses) {
             const biggy = new BN(await web3.eth.getBalance("0x" + addr));
             sum = sum.add(biggy);
-        });
+        }        
 
         res.json({
             gas_sum: accumulatedGas,
