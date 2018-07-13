@@ -10,14 +10,16 @@ const BN = require('bn.js');
 
 //Get configuration from environment
 const dbhost: string = process.env.DB_HOST || '10.142.1.12';
+const dbname: string = process.env.DB_NAME || 'voting';
 const dbuser: string = process.env.DB_USER || 'votingadmin';
 const dbpw: string = process.env.DB_PASSWORD || 'sl0ck1tUSNdemo';
+
 const contractAddress: string = process.env.CONTRACT_ADDR || '0x50ba2e417d573fcd67fab8ee5d6d764b105cd5f7';
 const srvPort: number = parseInt(process.env.PORT ? process.env.PORT : '9999') || 9999;
 const parityRpc: string = process.env.RPC_URL || 'http://10.142.1.10:8545';
 
 //Prepare DB
-const db = new Database(dbhost, dbuser, dbpw, 'voting', 5432);
+const db = new Database(dbhost, dbuser, dbpw, dbname, 5432);
 
 //blockchain requirements
 const web3 = new Web3(parityRpc);
@@ -298,6 +300,7 @@ router.route('/votes/gas/:PollId/:ProposalId')
         const pollId = parseInt(req.params.PollId);
         const proposalId = parseInt(req.params.ProposalId);
         let accumulatedGas: number = 0;
+        console.log("talk to db");
         try {
             accumulatedGas = await db.getTotalTrxGasForProposal(pollId, proposalId);
         } catch (err) {
@@ -306,6 +309,7 @@ router.route('/votes/gas/:PollId/:ProposalId')
             return;
         }
 
+        console.log("talk to db - addr");
         let addresses: string[] = [];
         try {
             addresses = await db.getAddressesForProposal(pollId, proposalId);
@@ -315,6 +319,7 @@ router.route('/votes/gas/:PollId/:ProposalId')
             return;
         }
 
+        console.log("talk to parity");
         let sum = new BN(0);
         for(const addr of addresses) {
             const biggy = new BN(await web3.eth.getBalance("0x" + addr));
