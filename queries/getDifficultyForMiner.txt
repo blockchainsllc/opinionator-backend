@@ -1,5 +1,4 @@
 db.getCollection("blocks").aggregate(
-
 	// Pipeline
 	[
 		// Stage 1
@@ -14,7 +13,7 @@ db.getCollection("blocks").aggregate(
 			$project: {
 			    // specifications
 			    miner: 1,
-			    diff: {$convert: {input: "$dif",to: "long"}}
+			    dif: 1
 			}
 		},
 
@@ -23,19 +22,9 @@ db.getCollection("blocks").aggregate(
 			$group: {
 			    _id: "$miner",
 			    minedBlocks: { $sum:1},
-			    diffTotal: { $sum: "$diff"}
-			}
-		},
-
-		// Stage 4
-		{
-			$sort: {
-			 "minedBlocks":-1
+			    diffTotal: { $sum: "$dif"}
 			}
 		},
 
 	]
-
-	// Created with Studio 3T, the IDE for MongoDB - https://studio3t.com/
-
 );
