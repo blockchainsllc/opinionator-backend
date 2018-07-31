@@ -13,6 +13,8 @@ const dbhost: string = process.env.PG_HOST || '10.142.1.12';
 const dbname: string = process.env.PG_NAME || 'voting';
 const dbuser: string = process.env.PG_USER || 'votingadmin';
 const dbpw: string = process.env.PG_PASSWORD || 'sl0ck1tUSNdemo';
+const mongourl: string = process.env.MONGO_URL || 'mongodb://10.142.1.14';
+const mongoname: string = process.env.MONGO_NAME|| 'voting';
 
 const rootPath: string = process.env.ROOT_PATH || '';
 
@@ -22,7 +24,7 @@ const srvPort: number = parseInt(process.env.PORT ? process.env.PORT : '9999') |
 const parityRpc: string = process.env.RPC_URL || 'http://10.142.1.10:8545';
 
 //Prepare DB
-const db = new Database(dbhost, dbuser, dbpw, dbname, 5432);
+const db = new Database(dbhost, dbuser, dbpw, dbname,mongourl,mongoname, 5432);
 
 //blockchain requirements
 const web3 = new Web3(parityRpc);

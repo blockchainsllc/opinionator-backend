@@ -6,9 +6,11 @@ export class BlockChainDatabase {
 
     private db: any;
     private dburl: string;
+    private dbName: string;
 
-    constructor(url: string) {
+    constructor(url: string,dbname:string) {
         this.dburl = url;
+        this.dbName = dbname;
     }
 
     public connect(): Promise<{}> {
@@ -18,7 +20,7 @@ export class BlockChainDatabase {
                     reject("Unable to connect to mongo db: " + err);
                 }
 
-                this.db = client.db("voting");
+                this.db = client.db(this.dbName);
 
             });
         })
@@ -71,7 +73,8 @@ export class BlockChainDatabase {
            this.getContractsForSender(txsenders).then((contracts: string[]) => {
                const mcBlocks: Collection<any> = this.db.collection("blocks");
                mcBlocks.aggregate();
-
+               //TODO: Add missing aggregation
+                resolve(0);
             });
         });
     }
@@ -166,10 +169,12 @@ export default class Database {
 
     private dbPool: Pool;
     private mongoUrl: string;
+    private mongoName: string;
 
-    constructor(host: string, user: string, password: string, dbname: string, port: number = 5432) {
+    constructor(host: string, user: string, password: string, dbname: string, mongourl: string, mongoname:string, port: number = 5432) {
         // Prepare PGSQL connection pool
-        this.mongoUrl = "mongodb://10.142.1.14";
+        this.mongoUrl = mongourl;
+        this.mongoName = mongoname;
         this.dbPool = new Pool({
             user: user,
             host: host,
@@ -230,8 +235,10 @@ export default class Database {
     }
 
     public async getGasSumForAddress(address: string) : Promise<number> {
-        const mongo = new BlockChainDatabase(this.mongoUrl);
-        return mongo.getGasSumForAddress(address);
+        const mongo = new BlockChainDatabase(this.mongoUrl,this.mongoName);
+        return mongo.connect().then(() => {
+            return mongo.getGasSumForAddress(address);
+        });
     }
 
     public async checkVoteExists(pollId: number, address: string) :Promise<boolean> {
@@ -264,30 +271,26 @@ export default class Database {
 
     public async getTotalTrxGasForProposal(pollId: number, proposalId: number) : Promise<number> {
         const addresses: string[] = await this.getAddressesForProposal(pollId,proposalId);
-        const mongo = new BlockChainDatabase(this.mongoUrl);
-        return mongo.getGasSumForAddresses(addresses);
+        const mongo = new BlockChainDatabase(this.mongoUrl,this.mongoName);
+        return mongo.connect().then(() => {
+            return mongo.getGasSumForAddresses(addresses);
+        });
     }
 
     public async getTotalDifficultyForProposal(pollId: number, proposalId: number) : Promise<number> {
         const addresses: string[] = await this.getAddressesForProposal(pollId,proposalId);
-        const mongo = new BlockChainDatabase(this.mongoUrl);
-        return mongo.getDifficultySumForMiners(addresses);
+        const mongo = new BlockChainDatabase(this.mongoUrl,this.mongoName);
+        return mongo.connect().then(() => {
+            return mongo.getDifficultySumForMiners(addresses);
+        });
     }
 
     public async getTotalContractGasForProposal(pollId: number, proposalId: number) : Promise<number> {
-        // TODO: improve that statement
-        const qry: string = "; WITH i AS (SELECT DISTINCT trace.tx_hash, trace.trace_position, trace.gas_used, transactions.tx_sender FROM transactions INNER JOIN trace ON trace.send_to = transactions.creates INNER JOIN votes ON transactions.tx_sender = votes.address AND votes.voted_for_proposal = $1 AND votes.poll_id = $2) SELECT SUM(b.gas_used) - SUM(a.gas_used) FROM (SELECT SUM(trace.gas_used) AS gas_used, trace.tx_hash AS tx_hash FROM i INNER JOIN trace ON i.tx_hash = trace.tx_hash AND i.trace_position = trace.parent_trace_position GROUP BY trace.tx_hash ) AS a INNER JOIN i AS b ON a.tx_hash = b.tx_hash";
-
-        try {
-            const dbResultRows = await this.dbPool.query(qry,[proposalId, pollId]);
-            if(dbResultRows.rowCount > 0) {
-                return parseInt(dbResultRows.rows[0].i);
-            } else {
-                return 0;
-            }
-        } catch (err) {
-            throw "Unable to query database: " + err;
-        }
+        const addresses: string[] = await this.getAddressesForProposal(pollId,proposalId);
+        const mongo = new BlockChainDatabase(this.mongoUrl,this.mongoName);
+        return mongo.connect().then(() => {
+            return mongo.getDeveloperGasForAddresses(addresses);
+        });
     }
 
     public async getAddressesForProposal(pollId: number, proposalId: number) : Promise<string[]> {
