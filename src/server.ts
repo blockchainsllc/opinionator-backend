@@ -9,10 +9,13 @@ const Web3 = require('web3');
 const BN = require('bn.js');
 
 //Get configuration from environment
-const dbhost: string = process.env.DB_HOST || '10.142.1.12';
-const dbname: string = process.env.DB_NAME || 'voting';
-const dbuser: string = process.env.DB_USER || 'votingadmin';
-const dbpw: string = process.env.DB_PASSWORD || 'sl0ck1tUSNdemo';
+const dbhost: string = process.env.PG_HOST || '10.142.1.12';
+const dbname: string = process.env.PG_NAME || 'voting';
+const dbuser: string = process.env.PG_USER || 'votingadmin';
+const dbpw: string = process.env.PG_PASSWORD || 'sl0ck1tUSNdemo';
+
+const rootPath: string = process.env.ROOT_PATH || '';
+
 
 const contractAddress: string = process.env.CONTRACT_ADDR || '0x50ba2e417d573fcd67fab8ee5d6d764b105cd5f7';
 const srvPort: number = parseInt(process.env.PORT ? process.env.PORT : '9999') || 9999;
@@ -73,7 +76,7 @@ router.use(async (req: Request, res: Response, next) => {
 });
 
 //standart route
-router.get('/', (req: Request, res: Response) => {
+router.get( '/', (req: Request, res: Response) => {
     res.json({
         message: 'Blockchain voting for the win!'
     });
@@ -383,11 +386,12 @@ router.route('/Votes/Dev/:PollId/:ProposalId')
 //REGISTER ROUTES
 // =================================
 
-app.use('/api', router);
+app.use(rootPath+ '/api', router);
 
 //START THE SERVER
 // =================================
 
 app.listen(srvPort);
 log('Blockchain Backend running on ' + srvPort,'info');
+log('Basepath: ' + rootPath+ '/api');
 

@@ -1,0 +1,23 @@
+//Get Contracts for sender
+
+[
+     {
+        $match: {
+         "txs.sender": "2e7542ec36df6429d8c397f88c4cf0c925948f44"
+        }
+    },
+    { $unwind: { path : "$txs" }},
+    {
+        $match: {
+         "txs.sender": "2e7542ec36df6429d8c397f88c4cf0c925948f44",
+         "txs.receipt.contract": { $ne: "" }
+        }
+    },
+    {
+        $group: {
+            _id: 1,
+            contracts: { $addToSet: "$txs.receipt.contract" }
+        }
+    }
+]
+

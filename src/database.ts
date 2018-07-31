@@ -1,11 +1,175 @@
 import { Pool } from 'pg';
+import {Collection, MongoClient} from 'mongodb';
+
+export class BlockChainDatabase {
+    // Connects to the blockchain holding MongoDB to query for stuff
+
+    private db: any;
+    private dburl: string;
+
+    constructor(url: string) {
+        this.dburl = url;
+    }
+
+    public connect(): Promise<{}> {
+        return new Promise((resolve, reject) => {
+            MongoClient.connect(this.dburl, (err, client) => {
+                if(err) {
+                    reject("Unable to connect to mongo db: " + err);
+                }
+
+                this.db = client.db("voting");
+
+            });
+        })
+    }
+
+    private getContractsForSender(txsenders: string[]): Promise<string[]> {
+        return new Promise<string[]>((resolve, reject) => {
+           const mcBlocks: Collection<any> = this.db.collection("blocks");
+           mcBlocks.aggregate([
+               {
+                   $match: {
+                       "txs.sender": { $in: txsenders }
+                   }
+               },
+               { $unwind: { path : "$txs" }},
+               {
+                   $match: {
+                       "txs.sender": { $in: txsenders },
+                       "txs.receipt.contract": { $ne: "" }
+                   }
+               },
+               {
+                   $group: {
+                       _id: 1,
+                       contracts: { $addToSet: "$txs.receipt.contract" }
+                   }
+               }
+           ], (err, cursor) => {
+               if(err) {
+                   reject("Unable to run pipeline:" + err);
+               }
+
+               cursor.toArray((err, docs) => {
+                   if(err) {
+                       reject("Unable to get results: " + err);
+                   }
+
+                   if(docs.length > 0) {
+                       resolve(docs[0].contracts);
+                   } else {
+                       resolve([]);
+                   }
+               })
+           });
+        });
+    }
+
+    public getDeveloperGasForAddresses(txsenders: string[]): Promise<number> {
+        return new Promise<number>((resolve, reject) => {
+           this.getContractsForSender(txsenders).then((contracts: string[]) => {
+               const mcBlocks: Collection<any> = this.db.collection("blocks");
+               mcBlocks.aggregate();
+
+            });
+        });
+    }
+
+    public getGasSumForAddresses(txsenders: string[]): Promise<number> {
+        return new Promise<number>((resolve, reject) => {
+            const mcBlocks: Collection<any> = this.db.collection("blocks");
+            mcBlocks.aggregate([
+                {
+                    $match: {"txs.sender": { $in: txsenders}}
+                },
+                { $unwind: { path : "$txs" }},
+                {
+                    $match: {"txs.sender": { $in: txsenders}}
+                },
+                {
+                    $project: {
+                        sender: "$txs.sender",
+                        gas: "$txs.receipt.gasused"
+                    }
+                },
+                {
+                    $group: {
+                        _id: "1",
+                        gasTotal: { $sum: "$gas"}
+                    }
+                }
+            ],(err, cursor) => {
+                if(err) {
+                    reject("Unable to run pipeline:" + err);
+                }
+                cursor.toArray((err, documents) => {
+                    if(err) {
+                        reject("Unable to process result:" + err);
+                    }
+                    if(documents.length > 0) {
+                        resolve(documents[0].gasTotal);
+                    } else {
+                        resolve(0);
+                    }
+
+                });
+            });
+        });
+    }
+
+    public getDifficultySumForMiners(miners: string[]): Promise<number> {
+        return new Promise<number>((resolve, reject) => {
+            const mcBlocks: Collection<any> = this.db.collection("blocks");
+            mcBlocks.aggregate([
+                {
+                    $match: {"miner": { $in: miners}}
+                },
+                {
+                    $project: {
+                        miner: 1,
+                        dif: 1
+                    }
+                },
+                {
+                    $group: {
+                        _id: "1",
+                        totalDifficulty: { $sum: "$dif"}
+                    }
+                }
+            ],(err, cursor) => {
+                if(err) {
+                    reject("Unable to run pipeline:" + err);
+                }
+                cursor.toArray((err, documents) => {
+                    if(err) {
+                        reject("Unable to process result:" + err);
+                    }
+                    if(documents.length > 0) {
+                        resolve(documents[0].totalDifficulty);
+                    } else {
+                        resolve(0);
+                    }
+
+                });
+            });
+        });
+    }
+
+    public getGasSumForAddress(txsender: string): Promise<number> {
+        return this.getGasSumForAddresses([txsender]);
+    }
+
+}
 
 export default class Database {
 
     private dbPool: Pool;
+    private mongoUrl: string;
 
     constructor(host: string, user: string, password: string, dbname: string, port: number = 5432) {
         // Prepare PGSQL connection pool
+        this.mongoUrl = "mongodb://10.142.1.14";
         this.dbPool = new Pool({
             user: user,
             host: host,
@@ -66,21 +230,8 @@ export default class Database {
     }
 
     public async getGasSumForAddress(address: string) : Promise<number> {
-        let gasSum: number = 0;
-
-        const qry: string = "SELECT SUM(gas) as gas FROM transactions WHERE tx_sender = $1";
-        try {
-            const dbResultRows = await this.dbPool.query(qry,[address.toLowerCase()]);
-            if(dbResultRows.rowCount > 0) {
-                gasSum = parseInt(dbResultRows.rows[0].gas);
-            } else {
-                gasSum = -1;
-            }
-        }
-        catch(err) {
-            throw "Unable to query database: " + err;
-        }
-        return gasSum;
+        const mongo = new BlockChainDatabase(this.mongoUrl);
+        return mongo.getGasSumForAddress(address);
     }
 
     public async checkVoteExists(pollId: number, address: string) :Promise<boolean> {
@@ -112,31 +263,15 @@ export default class Database {
     }
 
     public async getTotalTrxGasForProposal(pollId: number, proposalId: number) : Promise<number> {
-        const qry: string = "SELECT SUM(transactions.gas) as gas FROM transactions INNER JOIN votes ON votes.address = transactions.tx_sender AND votes.voted_for_proposal = $1 AND votes.poll_id = $2";
-        try {
-            const dbResultRows = await this.dbPool.query(qry, [proposalId,pollId]);
-            if(dbResultRows.rowCount > 0) {
-                return parseInt(dbResultRows.rows[0].gas);
-            } else {
-                return 0;
-            }
-        } catch (err) {
-            throw "Unable to query database: " + err;
-        }
+        const addresses: string[] = await this.getAddressesForProposal(pollId,proposalId);
+        const mongo = new BlockChainDatabase(this.mongoUrl);
+        return mongo.getGasSumForAddresses(addresses);
     }
 
     public async getTotalDifficultyForProposal(pollId: number, proposalId: number) : Promise<number> {
-        const qry: string = "SELECT SUM(difficulty) as difficulty FROM block INNER JOIN votes ON votes.address = block.miner AND votes.voted_for_proposal = $1 AND votes.poll_id = $2 GROUP BY block.miner";
-        try {
-            const dbResultRows = await this.dbPool.query(qry, [proposalId,pollId]);
-            if(dbResultRows.rowCount > 0) {
-                return parseInt(dbResultRows.rows[0].difficulty);
-            } else {
-                return 0;
-            }
-        } catch (err) {
-            throw "Unable to query database: " + err;
-        }
+        const addresses: string[] = await this.getAddressesForProposal(pollId,proposalId);
+        const mongo = new BlockChainDatabase(this.mongoUrl);
+        return mongo.getDifficultySumForMiners(addresses);
     }
 
     public async getTotalContractGasForProposal(pollId: number, proposalId: number) : Promise<number> {
