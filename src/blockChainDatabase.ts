@@ -6,6 +6,7 @@ export class BlockChainDatabase {
     private db: any;
     private dburl: string;
     private dbName: string;
+    private client: any;
 
     constructor(url: string, dbname: string) {
         this.dburl = url;
@@ -19,9 +20,18 @@ export class BlockChainDatabase {
                     reject("Unable to connect to mongo db: " + err);
                 }
 
+                this.client = client;
                 this.db = client.db(this.dbName);
                 resolve();
 
+            });
+        })
+    }
+
+    public close(): Promise<{}> {
+        return new Promise<{}>((res,rej) => {
+            this.client.close(() => {
+                res();
             });
         })
     }

@@ -1,3 +1,5 @@
+var log = require('why-is-node-running') // should be your first require
+
 import {expect} from 'chai';
 import {BackendServer, IServerConfiguration} from "../src/server";
 import fs from "fs";
@@ -37,13 +39,15 @@ const logger: winston.Logger = winston.createLogger({
 
 describe('Voting Backend Service', () => {
     let server: any;
+    let backendSrv: BackendServer;
     beforeEach(() => {
-        const srv = new BackendServer(testConfiguration,logger,pollContract);
-        server = srv.startListening();
+        backendSrv = new BackendServer(testConfiguration,logger,pollContract);
+        server = backendSrv.startListening();
     });
 
     afterEach(() => {
         server.close();
+        backendSrv.stop();
     });
 
     describe('Calls to Blockchain', () => {
@@ -235,3 +239,7 @@ describe('Voting Backend Service', () => {
         });
     });
 });
+
+// setTimeout(function () {
+//     log() // logs out active handles that are keeping node running
+// }, 15000)

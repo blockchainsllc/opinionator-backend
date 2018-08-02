@@ -1,6 +1,5 @@
 import {Pool} from 'pg';
 import {BlockChainDatabase} from "./blockChainDatabase";
-import winston from "winston";
 
 export interface IDatabaseOptions {
     sqlHost:string;
@@ -30,6 +29,10 @@ export default class Database {
             password: opts.sqlPassword,
             port: opts.sqlPort
         });
+    }
+
+    public close() {
+        this.dbPool.end();
     }
 
     public async getAllVotes() : Promise<Vote[]> {
@@ -84,9 +87,10 @@ export default class Database {
 
     public async getGasSumForAddress(address: string) : Promise<number> {
         const mongo = new BlockChainDatabase(this.mongoUrl,this.mongoName);
-        return mongo.connect().then(() => {
-            return mongo.getGasSumForAddress(address);
-        });
+        await mongo.connect();
+        const gasForAddr: number = await mongo.getGasSumForAddress(address);
+        await mongo.close();
+        return gasForAddr;
     }
 
     public async checkVoteExists(pollId: number, address: string) :Promise<boolean> {
@@ -120,25 +124,29 @@ export default class Database {
     public async getTotalTrxGasForProposal(pollId: number, proposalId: number) : Promise<number> {
         const addresses: string[] = await this.getAddressesForProposal(pollId,proposalId);
         const mongo = new BlockChainDatabase(this.mongoUrl,this.mongoName);
-        return mongo.connect().then(() => {
-            return mongo.getGasSumForAddresses(addresses);
-        });
+        await mongo.connect();
+        const gas: number = await mongo.getGasSumForAddresses(addresses);
+        await mongo.close();
+        return gas;
     }
 
     public async getTotalDifficultyForProposal(pollId: number, proposalId: number) : Promise<number> {
         const addresses: string[] = await this.getAddressesForProposal(pollId,proposalId);
         const mongo = new BlockChainDatabase(this.mongoUrl,this.mongoName);
-        return mongo.connect().then(() => {
-            return mongo.getDifficultySumForMiners(addresses);
-        });
+        await mongo.connect();
+        const sumDiff: number = await mongo.getDifficultySumForMiners(addresses);
+        await mongo.close();
+        return sumDiff;
+
     }
 
     public async getTotalContractGasForProposal(pollId: number, proposalId: number) : Promise<number> {
         const addresses: string[] = await this.getAddressesForProposal(pollId,proposalId);
         const mongo = new BlockChainDatabase(this.mongoUrl,this.mongoName);
-        return mongo.connect().then(() => {
-            return mongo.getDeveloperGasForAddresses(addresses);
-        });
+        await mongo.connect();
+        const gas: number = await mongo.getDeveloperGasForAddresses(addresses);
+        await mongo.close();
+        return gas;
     }
 
     public async getAddressesForProposal(pollId: number, proposalId: number) : Promise<string[]> {

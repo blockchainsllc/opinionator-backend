@@ -61,6 +61,10 @@ export class BackendServer {
         return httpServer;
     }
 
+    public stop() {
+        this.db.close();
+    }
+
     private static error(msg: string): string {
         return JSON.stringify({status: "error", message: msg});
     }
