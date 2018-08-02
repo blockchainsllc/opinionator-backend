@@ -1,10 +1,45 @@
+import {expect} from 'chai';
+import {BackendServer, IServerConfiguration} from "../src/server";
+import fs from "fs";
+import winston from "winston";
+const Web3 = require('web3');
 const request = require('supertest');
-const expect = require('chai').expect;
+
+const testConfiguration: IServerConfiguration = {
+    listenPort: 9000,
+    contractAddress: '0x096DA8ED2eaFd6945b325DfD515315CBeB36F6d3',
+    parityRpc: 'https://rpc.slock.it/tobalaba',
+    basePath: '',
+    dbOptions: {
+        sqlPort: 5432,
+        sqlPassword: 'sl0ck1tvoting',
+        sqlDatabaseName: 'voting_tobalaba',
+        sqlUser: 'user_voting',
+        sqlHost: '10.142.1.12',
+        mongoDbName: 'voting_tobalaba',
+        mongoUrl:'mongodb://10.142.1.14:27017'
+    }
+};
+
+// load contract
+const web3 = new Web3(testConfiguration.parityRpc);
+const contract = JSON.parse(fs.readFileSync('./data/poll-contract.json').toString());
+const pollContract = new web3.eth.Contract(contract, testConfiguration.contractAddress);
+
+// get a logger
+const logger: winston.Logger = winston.createLogger({
+    level: 'info',
+    format: winston.format.json(),
+    transports: [
+        new winston.transports.File({ filename: 'test.log' })
+    ]
+});
 
 describe('Voting Backend Service', () => {
-    let server;
+    let server: any;
     beforeEach(() => {
-        server = require('../build/server.js');
+        const srv = new BackendServer(testConfiguration,logger,pollContract);
+        server = srv.startListening();
     });
 
     afterEach(() => {
@@ -24,7 +59,7 @@ describe('Voting Backend Service', () => {
             request(server)
                 .get('/api/poll')
                 .expect(200)
-                .expect((res) => {
+                .expect((res: any) => {
                     expect(res.body, 'json response').to.be.a('array');
                     expect(res.body, 'json response').to.have.length(2);
 
@@ -49,7 +84,7 @@ describe('Voting Backend Service', () => {
             request(server)
                 .get('/api/poll/0')
                 .expect(200)
-                .expect((res) => {
+                .expect((res: any) => {
                     expect(res.body, 'json response').to.be.a('array');
                     expect(res.body, 'json response').to.have.length(1);
 
@@ -73,7 +108,7 @@ describe('Voting Backend Service', () => {
             request(server)
                 .get('/api/proposal/0')
                 .expect(200)
-                .expect((res) => {
+                .expect((res: any) => {
                     expect(res.body, 'json response').to.be.a('array');
                     expect(res.body, 'json response').to.have.length(1);
 
@@ -98,7 +133,7 @@ describe('Voting Backend Service', () => {
             request(server)
                 .get('/api/votes/miner/0/0')
                 .expect(200)
-                .expect((res) => {
+                .expect((res: any) => {
                     expect(res.body, 'json response').to.be.a('object');
                     expect(res.body)
                         .to.have.property('gas_sum').that.is.a('number');
@@ -111,7 +146,7 @@ describe('Voting Backend Service', () => {
             request(server)
                 .get('/api/votes/dev/0/0')
                 .expect(200)
-                .expect((res) => {
+                .expect((res: any) => {
                     expect(res.body, 'json response').to.be.a('object');
                     expect(res.body)
                         .to.have.property('gas_sum').that.is.a('number');
@@ -123,7 +158,7 @@ describe('Voting Backend Service', () => {
             request(server)
                 .get('/api/votes/gas/0/0')
                 .expect(200)
-                .expect((res) => {
+                .expect((res: any) => {
                     expect(res.body, 'json response').to.be.a('object');
                     expect(res.body)
                         .to.have.property('gas_sum').that.is.a('number');
@@ -146,7 +181,7 @@ describe('Voting Backend Service', () => {
             request(server)
                 .get('/api/votes')
                 .expect(200)
-                .expect((res) => {
+                .expect((res: any) => {
                     expect(res.body, 'json response').to.be.a('array');
 
                     //test vote schema
@@ -174,7 +209,7 @@ describe('Voting Backend Service', () => {
             request(server)
                 .get('/api/votes/0')
                 .expect(200)
-                .expect((res) => {
+                .expect((res: any) => {
                     expect(res.body, 'json response').to.be.a('array');
                     expect(res.body, 'json response').to.have.length(1);
 
