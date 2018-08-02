@@ -1,5 +1,3 @@
-var log = require('why-is-node-running') // should be your first require
-
 import {expect} from 'chai';
 import {BackendServer, IServerConfiguration} from "../src/server";
 import fs from "fs";
@@ -239,7 +237,3 @@ describe('Voting Backend Service', () => {
         });
     });
 });
-
-// setTimeout(function () {
-//     log() // logs out active handles that are keeping node running
-// }, 15000)
