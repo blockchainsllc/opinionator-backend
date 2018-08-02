@@ -1,48 +1,71 @@
 /* Blockchain Voting -- Backend */
 import {PollDto, ProposalDto} from "./dtos";
 import fs from 'fs';
-import Database, {Vote} from './database';
+import Database, {IDatabaseOptions, Vote} from './database';
 import express, {Request, Response, Router} from 'express';
 import bodyParser from 'body-parser';
+import winston from 'winston';
+const expressWinston = require('express-winston');
 
 const Web3 = require('web3');
 const BN = require('bn.js');
 
+/***************
+ * CONFIGURATION
+ ***************/
+
 //Get configuration from environment
 const dbhost: string = process.env.PG_HOST || '10.142.1.12';
-const dbname: string = process.env.PG_NAME || 'voting';
-const dbuser: string = process.env.PG_USER || 'votingadmin';
-const dbpw: string = process.env.PG_PASSWORD || 'sl0ck1tUSNdemo';
-const mongourl: string = process.env.MONGO_URL || 'mongodb://10.142.1.14';
-const mongoname: string = process.env.MONGO_NAME|| 'voting';
+const dbname: string = process.env.PG_NAME || 'voting_tobalaba';
+const dbuser: string = process.env.PG_USER || 'user_voting';
+const dbpw: string = process.env.PG_PASSWORD || 'sl0ck1tvoting';
+const mongourl: string = process.env.MONGO_URL || 'mongodb://10.142.1.14:27017';
+const mongoname: string = process.env.MONGO_NAME|| 'voting_tobalaba';
 
 const rootPath: string = process.env.ROOT_PATH || '';
 
 
-const contractAddress: string = process.env.CONTRACT_ADDR || '0x50ba2e417d573fcd67fab8ee5d6d764b105cd5f7';
+const contractAddress: string = process.env.CONTRACT_ADDR || '0x096DA8ED2eaFd6945b325DfD515315CBeB36F6d3';
 const srvPort: number = parseInt(process.env.PORT ? process.env.PORT : '9999') || 9999;
-const parityRpc: string = process.env.RPC_URL || 'http://10.142.1.10:8545';
+const parityRpc: string = process.env.RPC_URL || 'https://rpc.slock.it/tobalaba';
 
-//Prepare DB
-const db = new Database(dbhost, dbuser, dbpw, dbname,mongourl,mongoname, 5432);
+//Setup winston
+const logger: winston.Logger = winston.createLogger({
+    level: 'info',
+    format: winston.format.json(),
+    transports: [
+        //
+        // - Write to all logs with level `info` and below to `combined.log`
+        // - Write all logs error (and below) to `error.log`.
+        //
+        new winston.transports.File({ filename: 'error.log', level: 'error' }),
+        new winston.transports.File({ filename: 'combined.log' })
+    ]
+});
 
-//blockchain requirements
+if (process.env.NODE_ENV !== 'test') {
+    logger.add(new winston.transports.Console({
+        format: winston.format.simple()
+    }));
+}
+
+
+//Prepare DB and blockchain connection
+const dbOpts: IDatabaseOptions = {
+    sqlPort: 5432,
+    sqlPassword: dbpw,
+    sqlDatabaseName: dbname,
+    sqlUser: dbuser,
+    sqlHost: dbhost,
+    mongoDbName: mongoname,
+    mongoUrl:mongourl
+}
+const db = new Database(dbOpts);
 const web3 = new Web3(parityRpc);
-
-const pollContractAddress = contractAddress;
 
 //Load contract from file
 const contract = JSON.parse(fs.readFileSync('./data/poll-contract.json').toString());
-const pollContract = new web3.eth.Contract(contract, pollContractAddress);
-
-function log(msg: string, level: string = "info") {
-    // TODO: Log to file later on
-    if(level === 'error') {
-        console.error("[" + level + "] " + msg);
-    } else {
-        console.log("[" + level + "] " + msg);
-    }
-}
+const pollContract = new web3.eth.Contract(contract, contractAddress);
 
 // Prepare HTTP API
 const app = express();
@@ -50,6 +73,11 @@ app.use(bodyParser.urlencoded({
     extended: true
 }));
 app.use(bodyParser.json());
+app.use(expressWinston.logger({
+    winstonInstance: logger,
+    meta: true, // optional: control whether you want to log the meta data about the request (default to true)
+    colorize: false, // Color the text and status code, using the Express/morgan color palette (text: gray, status: default green, 3XX cyan, 4XX yellow, 5XX red).
+}));
 
 //ROUTES FOR API
 // =================================
@@ -72,7 +100,7 @@ router.use(async (req: Request, res: Response, next) => {
     try {
         next();
     } catch (err) {
-        log(err, "error");
+        logger.log('error', err);
         res.status(500).send("Oops, something went wrong!");
     }
 });
@@ -104,7 +132,7 @@ router.route('/poll')
                 });
             }
         } catch (err) {
-            log(err,'error');
+            logger.log('error', err);
             res.status(500).send(error('Blockchain Error'));
             return;
         }
@@ -129,7 +157,7 @@ router.route('/poll/:PollId')
                 votingChoice: poll.votingChoice
             });
         } catch (err) {
-            console.error(err);
+            logger.log('error', err);
             res.status(500).send(error("Blockchain Error"));
             return;
         }
@@ -152,7 +180,7 @@ router.route('/proposal/:ProposalId')
                 pollId: proposal.pollId
             });
         } catch (err) {
-            log(err,'error');
+            logger.log('error', err);
             res.status(500).send(error("Blockchain Error"));
             return;
         }
@@ -169,7 +197,7 @@ router.route('/votes')
             // TODO: dbVotes should be mapped through a DTO
             dbVotes = await db.getAllVotes();
         } catch (err) {
-            log(err,'error');
+            logger.log('error', err);
             res.status(500).send(error('Database Error'));
             return;
         }
@@ -178,25 +206,26 @@ router.route('/votes')
 
     //stores a vote passed with the post
     .post(async (req: Request, res: Response) => {
-        const messageObject = JSON.parse(req.body.message);
+        //const payload = JSON.parse(req.body);
+        const messageObject = JSON.parse(req.body.data.message);
         //check for validity of the message
         const poll_id = messageObject.poll_id;
         const proposal_id = messageObject.proposal_id;
         const contract_address = messageObject.pollContractAddress;
 
         //check if the contract in the passed message is supported by slockit
-        if (contract_address.localeCompare(pollContractAddress) != 0) {
+        if (contract_address.localeCompare(contractAddress) != 0) {
             res.status(400).send(error("Unsupported Contract!"));
-            log("Unsupported contract",'error');
+            logger.log('error', "Unsupported contract");
             return;
         }
 
         //get the address from the signature
         let address: string = '';
         try {
-            address = await web3.eth.accounts.recover(req.body.message, req.body.signature)
+            address = await web3.eth.accounts.recover(req.body.data.message, req.body.data.signature)
         } catch (err) {
-            log(err,"error");
+            logger.log('error', err);
             res.status(500).send(error('Invalid message format!'));
             return;
         }
@@ -209,28 +238,28 @@ router.route('/votes')
 
             if(gasSumForAddress === -1) {
                 res.status(400).send(error("Unused Addresses are not supported!"));
-                log("Unused address used", 'warn');
+                logger.log('warning', "Unused Addresses are not supported!");
                 return;
             }
 
         } catch(err) {
-            log(err, 'error');
+            logger.log('error', err);
             res.status(500).send(error('Database Error'));
             return;
         }
 
-        const voteExists = await db.checkVoteExists(poll_id,address);
+        const voteExists = await db.checkVoteExists(poll_id,addressNox);
 
         //if no entry for that poll from this address then insert
         if (!voteExists) {
             try {
-                await db.createVote(poll_id,proposal_id,address,JSON.stringify(req.body));
+                await db.createVote(poll_id,proposal_id,addressNox,JSON.stringify(req.body.data));
                 res.json({
                     message: "success - vote taken",
                     successfullyVoted: true
                 });
             } catch (err) {
-                log("Unable to check vote:" + err, 'error');
+                logger.log('error', "Unable to check vote", err);
                 res.status(500).send(error('Database error'));
                 return;
             }
@@ -240,13 +269,13 @@ router.route('/votes')
 
             if (pollObject.votingChoice == 0) {// useNewestVote
                 try {
-                    await db.updateVote(poll_id,proposal_id,addressNox,JSON.stringify(req.body),true);
+                    await db.updateVote(poll_id,proposal_id,addressNox,JSON.stringify(req.body.data),true);
                     res.json({
                         message: "success - New vote has been noted",
                         successfullyVoted: true
                     });
                 } catch (err) {
-                    log(err, 'error');
+                    logger.log('error', err);
                     res.status(500).send(error('Database Error - Error Updating your Vote!'));
                     return;
                 }
@@ -268,7 +297,7 @@ router.route('/votes')
                     });
 
                 } catch (err) {
-                    log("Unable to update vote: " + err,'error');
+                    logger.log('error',"Unable to update vote",err);
                     res.status(500).send(error('Database Error - Error Updating your Vote!'));
                     return;
                 }
@@ -291,7 +320,8 @@ router.route('/Votes/:PollId')
             const votes: Vote[] = await db.getVotesForPoll(req.params.PollId);
             res.json(votes);
         } catch (err) {
-            log(err,'error');
+            logger.log('error', err);
+
             res.status(500).send(error('Database Error - Error Selecting!'));
             return;
         }
@@ -305,26 +335,25 @@ router.route('/votes/gas/:PollId/:ProposalId')
         const pollId = parseInt(req.params.PollId);
         const proposalId = parseInt(req.params.ProposalId);
         let accumulatedGas: number = 0;
-        console.log("talk to db");
         try {
             accumulatedGas = await db.getTotalTrxGasForProposal(pollId, proposalId);
         } catch (err) {
-            log(err, 'error');
+            logger.log('error', err);
+
             res.status(500).send(error('Database Error - Error Selecting!'));
             return;
         }
 
-        console.log("talk to db - addr");
         let addresses: string[] = [];
         try {
             addresses = await db.getAddressesForProposal(pollId, proposalId);
         } catch (err) {
-            log(err,'error');
+            logger.log('error', err);
+
             res.status(500).send(error('Database Error - Error Selecting!'));
             return;
         }
 
-        console.log("talk to parity");
         let sum = new BN(0);
         for(const addr of addresses) {
             const biggy = new BN(await web3.eth.getBalance("0x" + addr));
@@ -350,7 +379,7 @@ router.route('/Votes/Miner/:PollId/:ProposalId')
         try {
             totalDifficulty = await db.getTotalDifficultyForProposal(pollId, proposalId);
         } catch (err) {
-            log(err,'error');
+            logger.log('error', err);
             res.status(500).send(error('Database Error - Error Selecting!'));
             return;
         }
@@ -374,7 +403,7 @@ router.route('/Votes/Dev/:PollId/:ProposalId')
         try {
             accumulatedGas = await db.getTotalContractGasForProposal(pollId, proposalId);
         } catch (err) {
-            log(err,'error');
+            logger.log('error', err);
             res.status(500).send(error('Database Error - Error Selecting!'));
             return;
         }
@@ -393,7 +422,7 @@ app.use(rootPath+ '/api', router);
 //START THE SERVER
 // =================================
 
-app.listen(srvPort);
-log('Blockchain Backend running on ' + srvPort,'info');
-log('Basepath: ' + rootPath+ '/api');
-
+const httpServer = app.listen(srvPort);
+logger.log('info','Blockchain Backend running on port ' + srvPort);
+logger.log('info','Basepath: ' + rootPath+ '/api');
+module.exports = httpServer;
