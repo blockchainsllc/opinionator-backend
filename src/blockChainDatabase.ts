@@ -29,7 +29,7 @@ export class BlockChainDatabase {
     }
 
     public close(): Promise<{}> {
-        return new Promise<{}>((res,rej) => {
+        return new Promise<{}>((res) => {
             this.client.close(() => {
                 res();
             });

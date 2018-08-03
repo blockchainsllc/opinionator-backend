@@ -1,5 +1,5 @@
 import {expect} from 'chai';
-import {BackendServer, IServerConfiguration} from "../src/server";
+import {BackendServer, IServerConfiguration} from "../server";
 import fs from "fs";
 import winston from "winston";
 const Web3 = require('web3');
