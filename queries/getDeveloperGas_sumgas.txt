@@ -1,0 +1,48 @@
+db.getCollection("blocks").aggregate(
+
+	// Pipeline
+	[
+		// Stage 1
+		{
+			$match: {
+			 "txs.traces.to":"2cd1feb4b1565bffab931e20a9986d1c965f06fb"
+			}
+		},
+
+		// Stage 2
+		{
+			$unwind: {
+			    path : "$txs"
+			}
+		},
+
+		// Stage 3
+		{
+			$unwind: {
+			    path : "$txs.traces",
+
+			}
+		},
+
+		// Stage 4
+		{
+			$match: {
+			 "txs.traces.to":"2cd1feb4b1565bffab931e20a9986d1c965f06fb"
+			}
+		},
+
+		// Stage 5
+		{
+			$group: {
+				_id: "$txs.traces.to",
+				ct: { $sum:1},
+				gasSum: { $sum: "$txs.traces.gasused" },
+
+			}
+		},
+
+	]
+
+	// Created with Studio 3T, the IDE for MongoDB - https://studio3t.com/
+
+);
