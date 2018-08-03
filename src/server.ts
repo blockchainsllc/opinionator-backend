@@ -20,13 +20,10 @@ export interface IServerConfiguration {
 export class BackendServer {
     private app: Express;
     private logger: winston.Logger;
-
     private contract: any;
     private web3: any;
     private config: IServerConfiguration;
     private db: Database;
-
-    //web3 contract
 
     constructor(config: IServerConfiguration, logger: winston.Logger, contract: any) {
         this.app = express();
@@ -203,17 +200,17 @@ export class BackendServer {
             return;
         }
 
-//get the address from the signature
+        //get the address from the signature
         let address: string = '';
         try {
             address = await this.web3.eth.accounts.recover(req.body.data.message, req.body.data.signature)
         } catch (err) {
             this.logger.log('error', err);
-            res.status(500).send(BackendServer.error('Invalid message format!'));
+            res.status(500).send(BackendServer.error('unable to process signature'));
             return;
         }
 
-//delete 0x (for database use)
+        //delete 0x (for database use)
         const addressNox: string = address.substring(2);
 
         try {
@@ -233,7 +230,7 @@ export class BackendServer {
 
         const voteExists = await this.db.checkVoteExists(poll_id, addressNox);
 
-//if no entry for that poll from this address then insert
+        //if no entry for that poll from this address then insert
         if (!voteExists) {
             try {
                 await this.db.createVote(poll_id, proposal_id, addressNox, JSON.stringify(req.body.data));
