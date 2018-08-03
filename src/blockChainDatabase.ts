@@ -82,9 +82,34 @@ export class BlockChainDatabase {
         return new Promise<number>((resolve, reject) => {
             this.getContractsForSender(txsenders).then((contracts: string[]) => {
                 const mcBlocks: Collection<any> = this.db.collection("blocks");
-                mcBlocks.aggregate();
-                //TODO: Add missing aggregation
-                resolve(0);
+                mcBlocks.aggregate([
+                    { $match: { "txs.traces.to":{ $in: contracts } } },
+                    { $unwind: { path : "$txs" } },
+                    { $unwind: { path : "$txs.traces" } },
+                    { $match: { "txs.traces.to":{ $in: contracts } } },
+                    {
+                        $group: {
+                            _id: 1,
+                            ct: { $sum:1},
+                            gasSum: { $sum: "$txs.traces.gasused" },
+                        }
+                    }
+                ], (err, cursor) => {
+                    if(err) {
+                        reject("unable to query: "+ err);
+                    }
+
+                    cursor.toArray((err, docs) => {
+                        if(err) {
+                            reject("Unable to read documents:" + err);
+                        }
+                        if(docs.length > 0) {
+                            resolve(docs[0].gasSum);
+                        } else {
+                            resolve(0);
+                        }
+                    })
+                });
             });
         });
     }
