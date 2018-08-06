@@ -191,7 +191,7 @@ export class BackendServer {
         //check for validity of the message
         const poll_id = messageObject.poll_id;
         const proposal_id = messageObject.proposal_id;
-        const contract_address = messageObject.contractAddress;
+        const contract_address = messageObject.pollContractAddress;
 
         //check if the contract in the passed message is supported by slockit
         if (contract_address.localeCompare(this.config.contractAddress) != 0) {
