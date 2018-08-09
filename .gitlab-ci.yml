@@ -31,8 +31,11 @@ test-backend:
 
 package-into-docker:
   image: docker
+  stage: package
   dependencies:
     - build-backend
+  tags:
+    - short-jobs
   services:
     - docker:dind
   script:
@@ -44,8 +47,10 @@ package-into-docker:
 
 deploy-to-production:
     stage: deploy
+    tags:
+      - short-jobs
     only:
-        - tags
+      - tags
     image: markuskeil/docker-and-rancher
     dependencies:
       - package-into-docker
