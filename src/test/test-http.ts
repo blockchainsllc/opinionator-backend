@@ -63,7 +63,6 @@ describe('Voting Backend Service', () => {
                 .expect(200)
                 .expect((res: any) => {
                     expect(res.body, 'json response').to.be.a('array');
-                    expect(res.body, 'json response').to.have.length(2);
 
                     //test both polls
                     for (var i = 0; i < res.body.length; i++) {
