@@ -12,7 +12,7 @@ build-backend:
   script:
     - sh /prepare.sh
     - yarn install
-    - yarn global add typescript tsc
+    - yarn add typescript
     - tsc
   artifacts:
       name: build
