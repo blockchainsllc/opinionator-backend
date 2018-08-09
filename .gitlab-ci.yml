@@ -11,8 +11,8 @@ build-backend:
     - short-jobs
   script:
     - sh /prepare.sh
-    - yarn install
-    - yarn add typescript
+    - npm install
+    - npm install typescript
     - tsc
   artifacts:
       name: build
@@ -26,8 +26,8 @@ test-backend:
     - short-jobs
   script:
     - sh /prepare.sh
-    - yarn install
-    - yarn test
+    - npm install
+    - npm test
 
 package-into-docker:
   image: docker
