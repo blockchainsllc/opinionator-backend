@@ -12,6 +12,7 @@ build-backend:
   script:
     - sh /prepare.sh
     - yarn install
+    - yarn install -g typescript tsc
     - tsc
   artifacts:
       name: build
