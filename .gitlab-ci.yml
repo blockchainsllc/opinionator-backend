@@ -12,7 +12,7 @@ build-backend:
   script:
     - sh /prepare.sh
     - npm install
-    - npm install typescript
+    - npm install -g typescript
     - tsc
   artifacts:
       name: build
