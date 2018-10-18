@@ -3,14 +3,14 @@ services:
   backend-mainnet:
     image: docker.slock.it/blockchain-voting/voting-backend:$CI_COMMIT_REF_NAME
     environment:
-      PG_HOST: pgpool.db-sql
+      PG_HOST: sql-production.slockit.io
       PG_NAME: voting
       PG_USER: user_voting
       PG_PASSWORD: $DEPLOY_PG_PASSWORD
       MONGO_URL: mongodb://10.142.1.14:27017
       MONGO_NAME: voting
       CONTRACT_ADDR: '0xa603eed441b3f6d0a9143f846be6896de10318a3'
-      RPC_URL: http://rpc.slock.it/mainnet
+      RPC_URL: https://rpc.slock.it/mainnet
     stdin_open: true
     tty: true
     labels:
@@ -19,13 +19,13 @@ services:
   backend-tobalaba:
     image: docker.slock.it/blockchain-voting/voting-backend:$CI_COMMIT_REF_NAME
     environment:
-      PG_HOST: pgpool.db-sql
+      PG_HOST: sql-production.slockit.io
       PG_NAME: voting_tobalaba
       PG_USER: user_voting
       PG_PASSWORD: $DEPLOY_PG_PASSWORD
       MONGO_URL: mongodb://10.142.1.14:27017
       MONGO_NAME: voting_tobalaba
-      RPC_URL: http://rpc.slock.it/tobalaba
+      RPC_URL: https://rpc.slock.it/tobalaba
       CONTRACT_ADDR: '0xd2b2a97c0fdc868d9684a7236b0767c9c4c29352'
     stdin_open: true
     tty: true
