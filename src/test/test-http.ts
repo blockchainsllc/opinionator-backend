@@ -11,11 +11,6 @@ const testConfiguration: IServerConfiguration = {
     parityRpc: 'https://rpc.slock.it/tobalaba',
     basePath: '',
     dbOptions: {
-        sqlPort: 5432,
-        sqlPassword: 'sl0ck1tvoting',
-        sqlDatabaseName: 'voting_tobalaba',
-        sqlUser: 'user_voting',
-        sqlHost: '10.142.1.12',
         mongoDbName: 'voting_tobalaba',
         mongoUrl:'mongodb://10.142.1.14:27017'
     }
