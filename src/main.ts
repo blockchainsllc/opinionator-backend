@@ -6,10 +6,6 @@ import winston from 'winston';
 const Web3 = require('web3');
 
 //Get configuration from environment
-const dbhost: string = process.env.PG_HOST || '10.142.1.12';
-const dbname: string = process.env.PG_NAME || 'voting_tobalaba';
-const dbuser: string = process.env.PG_USER || 'user_voting';
-const dbpw: string = process.env.PG_PASSWORD || 'sl0ck1tvoting';
 const mongourl: string = process.env.MONGO_URL || 'mongodb://10.142.1.14:27017';
 const mongoname: string = process.env.MONGO_NAME|| 'voting_tobalaba';
 const rootPath: string = process.env.ROOT_PATH || '';
@@ -19,11 +15,6 @@ const parityRpc: string = process.env.RPC_URL || 'https://rpc.slock.it/tobalaba'
 
 // Build config objects
 const dbOpts: IDatabaseOptions = {
-    sqlPort: 5432,
-    sqlPassword: dbpw,
-    sqlDatabaseName: dbname,
-    sqlUser: dbuser,
-    sqlHost: dbhost,
     mongoDbName: mongoname,
     mongoUrl:mongourl
 };
@@ -45,16 +36,9 @@ const logger: winston.Logger = winston.createLogger({
         // - Write to all logs with level `info` and below to `combined.log`
         // - Write all logs error (and below) to `error.log`.
         //
-        new winston.transports.File({ filename: 'error.log', level: 'error' }),
-        new winston.transports.File({ filename: 'combined.log' })
+        new winston.transports.Console()
     ]
 });
-
-if (process.env.NODE_ENV !== 'test') {
-    logger.add(new winston.transports.Console({
-        format: winston.format.simple()
-    }));
-}
 
 // Load contract from file
 const web3 = new Web3(parityRpc);

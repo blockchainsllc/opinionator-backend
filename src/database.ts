@@ -1,14 +1,8 @@
 import {BlockChainDatabase} from "./blockChainDatabase";
 
 export interface IDatabaseOptions {
-    sqlHost:string;
-    sqlDatabaseName:string;
-    sqlUser:string;
-    sqlPassword:string;
-    sqlPort:number;
     mongoUrl: string;
     mongoDbName: string;
-
 }
 
 export default class Database {
@@ -17,7 +11,6 @@ export default class Database {
     private mongoName: string;
 
     constructor(opts: IDatabaseOptions) {
-        // Prepare PGSQL connection pool
         this.mongoUrl = opts.mongoUrl;
         this.mongoName = opts.mongoDbName;
     }
