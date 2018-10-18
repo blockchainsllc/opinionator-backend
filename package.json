@@ -4,7 +4,7 @@
   "description": "The API for the voting tool",
   "main": "server.js",
   "dependencies": {
-    "body-parser": "^1.18.2",
+    "body-parser": "^1.18.3",
     "express": "^4.16.3",
     "express-winston": "^2.6.0",
     "mongodb": "^3.1.1",
