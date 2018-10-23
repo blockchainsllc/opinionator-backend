@@ -180,18 +180,19 @@ export class BlockChainDatabase {
 
 
     private getContractsForSender(txsenders: string[]): Promise<string[]> {
+        const lcSenders =  txsenders.map(x => x.toLowerCase());
         return new Promise<string[]>((resolve, reject) => {
             const mcBlocks: Collection<any> = this.db.collection("blocks");
             mcBlocks.aggregate([
                 {
                     $match: {
-                        "txs.sender": {$in: txsenders}
+                        "txs.sender": {$in: lcSenders}
                     }
                 },
                 {$unwind: {path: "$txs"}},
                 {
                     $match: {
-                        "txs.sender": {$in: txsenders},
+                        "txs.sender": {$in: lcSenders},
                         "txs.receipt.contract": {$ne: ""}
                     }
                 },
@@ -222,6 +223,7 @@ export class BlockChainDatabase {
     }
 
     public getDeveloperGasForAddresses(txsenders: string[]): Promise<number> {
+        
         return new Promise<number>((resolve, reject) => {
             this.getContractsForSender(txsenders).then((contracts: string[]) => {
                 const mcBlocks: Collection<any> = this.db.collection("blocks");
@@ -258,15 +260,16 @@ export class BlockChainDatabase {
     }
 
     public getGasSumForAddresses(txsenders: string[]): Promise<number> {
+        const lcSenders =  txsenders.map(x => x.toLowerCase());
         return new Promise<number>((resolve, reject) => {
             const mcBlocks: Collection<any> = this.db.collection("blocks");
             mcBlocks.aggregate([
                 {
-                    $match: {"txs.sender": {$in: txsenders}}
+                    $match: {"txs.sender": {$in: lcSenders}}
                 },
                 {$unwind: {path: "$txs"}},
                 {
-                    $match: {"txs.sender": {$in: txsenders}}
+                    $match: {"txs.sender": {$in: lcSenders}}
                 },
                 {
                     $project: {
@@ -300,11 +303,13 @@ export class BlockChainDatabase {
     }
 
     public getDifficultySumForMiners(miners: string[]): Promise<number> {
+        const lcMiners =  miners.map(x => x.toLowerCase());
+
         return new Promise<number>((resolve, reject) => {
             const mcBlocks: Collection<any> = this.db.collection("blocks");
             mcBlocks.aggregate([
                 {
-                    $match: {"miner": {$in: miners}}
+                    $match: {"miner": {$in: lcMiners}}
                 },
                 {
                     $project: {

@@ -289,8 +289,9 @@ export class BackendServer {
 
     private getVoteByPollId = async (req: Request, res: Response) => {
         // TODO: verify that pollid is integer
+        const pollId = parseInt(req.params.PollId);
         try {
-            const votes: Vote[] = await this.db.getVotesForPoll(req.params.PollId);
+            const votes: Vote[] = await this.db.getVotesForPoll(pollId);
             res.json(votes);
         } catch (err) {
             this.logger.log('error', err);
