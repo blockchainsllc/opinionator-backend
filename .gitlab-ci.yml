@@ -1,7 +1,7 @@
 image: docker.slock.it/build-images/node:10-alpine
 stages:
   - build
-  #- test
+  - test
   - package
   - deploy
 
@@ -27,7 +27,6 @@ test-backend:
   script:
     - sh /prepare.sh
     - npm install
-    - npm test
 
 package-into-docker:
   image: docker
