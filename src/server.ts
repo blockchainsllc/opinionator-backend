@@ -36,15 +36,16 @@ export class BackendServer {
             extended: true
         }));
         this.app.use(bodyParser.json());
+        
+
+        const router = this.setupRouter();
+        this.app.use(this.config.basePath + '/api', router);
+
         this.app.use(expressWinston.logger({
             winstonInstance: logger,
             meta: true, // optional: control whether you want to log the meta data about the request (default to true)
             colorize: false, // Color the text and status code, using the Express/morgan color palette (text: gray, status: default green, 3XX cyan, 4XX yellow, 5XX red).
         }));
-
-        const router = this.setupRouter();
-        this.app.use(this.config.basePath + '/api', router);
-
         //Init DB
         this.db = new Database(this.config.dbOptions);
         this.web3 = new Web3(this.config.parityRpc);
@@ -74,12 +75,6 @@ export class BackendServer {
             //allow cross site scripting
             res.header("Access-Control-Allow-Origin", "*");
             res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-            try {
-                next();
-            } catch (err) {
-                this.logger.log('error', err);
-                res.status(500).send("Oops, something went wrong!");
-            }
         });
 
         // Map paths
