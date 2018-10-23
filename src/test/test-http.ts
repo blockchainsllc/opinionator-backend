@@ -11,11 +11,6 @@ const testConfiguration: IServerConfiguration = {
     parityRpc: 'https://rpc.slock.it/tobalaba',
     basePath: '',
     dbOptions: {
-        sqlPort: 5432,
-        sqlPassword: 'sl0ck1tvoting',
-        sqlDatabaseName: 'voting_tobalaba',
-        sqlUser: 'user_voting',
-        sqlHost: '10.142.1.12',
         mongoDbName: 'voting_tobalaba',
         mongoUrl:'mongodb://10.142.1.14:27017'
     }
@@ -188,17 +183,17 @@ describe('Voting Backend Service', () => {
                     //test vote schema
                     for (var i = 0; i < res.body.length; i++) {
                         expect(res.body[i], 'vote' + i + ' -> voteId')
-                            .to.have.property('voteId').that.is.a('string');
+                            .to.have.property('voteId').that.is.a('number');
                         expect(res.body[i], 'vote' + i + ' -> pollId')
-                            .to.have.property('pollId').that.is.a('string');
+                            .to.have.property('pollId').that.is.a('number');
                         expect(res.body[i], 'vote' + i + ' -> proposalId')
-                            .to.have.property('proposalId').that.is.a('string');
+                            .to.have.property('proposalId').that.is.a('number');
                         expect(res.body[i], 'vote' + i + ' -> timestamp')
-                            .to.have.property('timestamp').that.is.a('string');
+                            .to.have.property('timestamp').that.is.a('number');
                         expect(res.body[i], 'vote' + i + ' -> voterAddress')
                             .to.have.property('voterAddress').that.is.a('string');
                         expect(res.body[i], 'vote' + i + ' -> message')
-                            .to.have.property('message').that.is.a('object');
+                            .to.have.property('message').that.is.a('string');
                         expect(res.body[i], 'vote' + i + ' -> isValid')
                             .to.have.property('isValid').that.is.a('boolean');
                     }
