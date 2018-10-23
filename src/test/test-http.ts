@@ -11,7 +11,8 @@ const testConfiguration: IServerConfiguration = {
     parityRpc: 'https://rpc.slock.it/tobalaba',
     basePath: '',
     dbOptions: {
-        mongoDbName: 'voting_tobalaba',
+        mongoDbName: 'votedata_tobalaba_stage',
+        mongoDbDataName: 'voting_tobalaba',
         mongoUrl:'mongodb://10.142.1.14:27017'
     }
 };

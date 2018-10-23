@@ -50,14 +50,36 @@ deploy-to-production:
     tags:
       - short-jobs
     only:
-      - tags
+      - master
     image: markuskeil/docker-and-rancher
+    variables:
+      CI_DBNAME_MAIN: votedata_mainnet
+      CI_DBNAME_TOB: votedata_tobalaba
     dependencies:
       - package-into-docker
     services:
       - docker:dind
     script:
       - rancher-compose -p $CI_PROJECT_PATH_SLUG up -p -d -c --force-upgrade
+
+deploy-to-stage:
+    stage: deploy
+    tags:
+      - short-jobs
+    variables:
+      CI_DBNAME_MAIN: votedata_mainnet_stage
+      CI_DBNAME_TOB: votedata_tobalaba_stage
+    only:
+      - develop
+    image: markuskeil/docker-and-rancher
+    dependencies:
+      - package-into-docker
+    services:
+      - docker:dind
+    script:
+      - rancher-compose -p stage-$CI_PROJECT_PATH_SLUG up -p -d -c --force-upgrade
+
+
 
 
 

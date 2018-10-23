@@ -7,7 +7,8 @@ const Web3 = require('web3');
 
 //Get configuration from environment
 const mongourl: string = process.env.MONGO_URL || 'mongodb://10.142.1.14:27017';
-const mongoname: string = process.env.MONGO_NAME|| 'voting_tobalaba';
+const mongoname: string = process.env.MONGO_NAME|| 'votedata_tobalaba_stage';
+const mongodataname: string = process.env.MONGO_DATANAME|| 'voting_tobalaba';
 const rootPath: string = process.env.ROOT_PATH || '';
 const contractAddress: string = process.env.CONTRACT_ADDR || '0x096DA8ED2eaFd6945b325DfD515315CBeB36F6d3';
 const srvPort: number = parseInt(process.env.PORT ? process.env.PORT : '9999') || 9999;
@@ -16,7 +17,8 @@ const parityRpc: string = process.env.RPC_URL || 'https://rpc.slock.it/tobalaba'
 // Build config objects
 const dbOpts: IDatabaseOptions = {
     mongoDbName: mongoname,
-    mongoUrl:mongourl
+    mongoUrl:mongourl,
+    mongoDbDataName: mongodataname
 };
 
 const serverConfig: IServerConfiguration = {

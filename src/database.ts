@@ -3,16 +3,19 @@ import {BlockChainDatabase} from "./blockChainDatabase";
 export interface IDatabaseOptions {
     mongoUrl: string;
     mongoDbName: string;
+    mongoDbDataName:string;
 }
 
 export default class Database {
 
     private mongoUrl: string;
     private mongoName: string;
+    private mongoDataName: string;
 
     constructor(opts: IDatabaseOptions) {
         this.mongoUrl = opts.mongoUrl;
         this.mongoName = opts.mongoDbName;
+        this.mongoDataName = opts.mongoDbDataName;
     }
 
     public close() {
@@ -66,7 +69,7 @@ export default class Database {
 
     public async getTotalTrxGasForProposal(pollId: number, proposalId: number) : Promise<number> {
         const addresses: string[] = await this.getAddressesForProposal(pollId,proposalId);
-        const mongo = new BlockChainDatabase(this.mongoUrl,this.mongoName);
+        const mongo = new BlockChainDatabase(this.mongoUrl,this.mongoDataName);
         await mongo.connect();
         const gas: number = await mongo.getGasSumForAddresses(addresses);
         await mongo.close();
@@ -75,7 +78,7 @@ export default class Database {
 
     public async getTotalDifficultyForProposal(pollId: number, proposalId: number) : Promise<number> {
         const addresses: string[] = await this.getAddressesForProposal(pollId,proposalId);
-        const mongo = new BlockChainDatabase(this.mongoUrl,this.mongoName);
+        const mongo = new BlockChainDatabase(this.mongoUrl,this.mongoDataName);
         await mongo.connect();
         const sumDiff: number = await mongo.getDifficultySumForMiners(addresses);
         await mongo.close();
@@ -85,7 +88,7 @@ export default class Database {
 
     public async getTotalContractGasForProposal(pollId: number, proposalId: number) : Promise<number> {
         const addresses: string[] = await this.getAddressesForProposal(pollId,proposalId);
-        const mongo = new BlockChainDatabase(this.mongoUrl,this.mongoName);
+        const mongo = new BlockChainDatabase(this.mongoUrl,this.mongoDataName);
         await mongo.connect();
         const gas: number = await mongo.getDeveloperGasForAddresses(addresses);
         await mongo.close();
@@ -93,7 +96,7 @@ export default class Database {
     }
 
     public async getAddressesForProposal(pollId: number, proposalId: number) : Promise<string[]> {
-        const mongo = new BlockChainDatabase(this.mongoUrl,this.mongoName);
+        const mongo = new BlockChainDatabase(this.mongoUrl,this.mongoDataName);
         await mongo.connect();
         const addresses: string[] = await mongo.getAddressForProposal(pollId,proposalId);
         await mongo.close();
