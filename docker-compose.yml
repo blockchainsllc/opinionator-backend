@@ -3,7 +3,7 @@ services:
   backend-mainnet:
     image: docker.slock.it/blockchain-voting/voting-backend:$CI_COMMIT_REF_NAME
     environment:
-      MONGO_URL: mongodb://10.142.1.14:27017
+      MONGO_URL: mongodb://10.142.1.15:27017
       MONGO_NAME: $CI_DBNAME_MAIN
       MONGO_DATANAME: voting
       CONTRACT_ADDR: '0xa603eed441b3f6d0a9143f846be6896de10318a3'
@@ -16,7 +16,7 @@ services:
   backend-tobalaba:
     image: docker.slock.it/blockchain-voting/voting-backend:$CI_COMMIT_REF_NAME
     environment:
-      MONGO_URL: mongodb://10.142.1.14:27017
+      MONGO_URL: mongodb://10.142.1.15:27017
       MONGO_NAME: $CI_DBNAME_TOB
       MONGO_DATANAME: voting_tobalaba
       RPC_URL: https://rpc.slock.it/tobalaba
