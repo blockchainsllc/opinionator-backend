@@ -3,10 +3,11 @@ import fs from 'fs';
 import {IDatabaseOptions } from './database';
 import {BackendServer, IServerConfiguration} from "./server";
 import winston from 'winston';
+import { preAggregate } from './pre-aggregate';
 const Web3 = require('web3');
 
 //Get configuration from environment
-const mongourl: string = process.env.MONGO_URL || 'mongodb://10.142.1.14:27017';
+const mongourl: string = process.env.MONGO_URL || 'mongodb://10.142.1.15:27017';
 const mongoname: string = process.env.MONGO_NAME|| 'votedata_tobalaba_stage';
 const mongodataname: string = process.env.MONGO_DATANAME|| 'voting_tobalaba';
 const rootPath: string = process.env.ROOT_PATH || '';
@@ -50,3 +51,12 @@ const pollContract = new web3.eth.Contract(contract, contractAddress);
 // Instantiate and fire up server
 const srv = new BackendServer(serverConfig,logger,pollContract);
 srv.startListening();
+
+function agg() {
+    setTimeout(() => {
+        preAggregate(logger);
+        agg();
+    },60000)
+}
+
+agg();

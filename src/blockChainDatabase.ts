@@ -1,5 +1,4 @@
 import {Collection, MongoClient} from "mongodb";
-import { Pool } from "pg";
 
 export class BlockChainDatabase {
     // Connects to the blockchain holding MongoDB to query for stuff
