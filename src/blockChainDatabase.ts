@@ -225,17 +225,13 @@ export class BlockChainDatabase {
         
         return new Promise<number>((resolve, reject) => {
             this.getContractsForSender(txsenders).then((contracts: string[]) => {
-                const mcBlocks: Collection<any> = this.db.collection("blocks");
+                const mcBlocks: Collection<any> = this.db.collection("voting_aggregated");
                 mcBlocks.aggregate([
-                    { $match: { "txs.traces.to":{ $in: contracts } } },
-                    { $unwind: { path : "$txs" } },
-                    { $unwind: { path : "$txs.traces" } },
-                    { $match: { "txs.traces.to":{ $in: contracts } } },
                     {
                         $group: {
                             _id: 1,
                             ct: { $sum:1},
-                            gasSum: { $sum: "$txs.traces.gasused" },
+                            gasSum: { $sum: "$gasUsed" },
                         }
                     }
                 ], (err, cursor) => {
@@ -261,25 +257,15 @@ export class BlockChainDatabase {
     public getGasSumForAddresses(txsenders: string[]): Promise<number> {
         const lcSenders =  txsenders.map(x => x.toLowerCase());
         return new Promise<number>((resolve, reject) => {
-            const mcBlocks: Collection<any> = this.db.collection("blocks");
+            const mcBlocks: Collection<any> = this.db.collection("voting_aggregated");
             mcBlocks.aggregate([
                 {
-                    $match: {"txs.sender": {$in: lcSenders}}
-                },
-                {$unwind: {path: "$txs"}},
-                {
-                    $match: {"txs.sender": {$in: lcSenders}}
-                },
-                {
-                    $project: {
-                        sender: "$txs.sender",
-                        gas: "$txs.receipt.gasused"
-                    }
+                    $match: {"address": {$in: lcSenders}, "type":"addressgas"}
                 },
                 {
                     $group: {
                         _id: "1",
-                        gasTotal: {$sum: "$gas"}
+                        gasTotal: {$sum: "$gasUsed"}
                     }
                 }
             ], (err, cursor) => {
@@ -305,21 +291,15 @@ export class BlockChainDatabase {
         const lcMiners =  miners.map(x => x.toLowerCase());
 
         return new Promise<number>((resolve, reject) => {
-            const mcBlocks: Collection<any> = this.db.collection("blocks");
+            const mcBlocks: Collection<any> = this.db.collection("voting_aggregated");
             mcBlocks.aggregate([
                 {
-                    $match: {"miner": {$in: lcMiners}}
-                },
-                {
-                    $project: {
-                        miner: 1,
-                        dif: 1
-                    }
+                    $match: {"address": {$in: lcMiners}, "type":"miner"}
                 },
                 {
                     $group: {
                         _id: "1",
-                        totalDifficulty: {$sum: "$dif"}
+                        totalDifficulty: {$sum: "$difficulty"}
                     }
                 }
             ], (err, cursor) => {
