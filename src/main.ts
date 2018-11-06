@@ -40,7 +40,11 @@ const logger: winston.Logger = winston.createLogger({
         // - Write all logs error (and below) to `error.log`.
         //
         new winston.transports.Console()
-    ]
+    ],
+    exceptionHandlers: [
+        new winston.transports.Console({handleExceptions:true})
+      ],  
+      exitOnError: false, // <--- set this to false
 });
 
 // Load contract from file

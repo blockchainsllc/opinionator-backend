@@ -222,11 +222,14 @@ export class BlockChainDatabase {
     }
 
     public getDeveloperGasForAddresses(txsenders: string[]): Promise<number> {
-        
+        const lcSenders =  txsenders.map(x => x.toLowerCase());
         return new Promise<number>((resolve, reject) => {
             this.getContractsForSender(txsenders).then((contracts: string[]) => {
                 const mcBlocks: Collection<any> = this.db.collection("voting_aggregated");
                 mcBlocks.aggregate([
+                    {
+                        $match: {"address": {$in: lcSenders}, "type":"dev"}
+                    },
                     {
                         $group: {
                             _id: 1,

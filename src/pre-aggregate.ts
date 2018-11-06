@@ -41,6 +41,11 @@ export function preAggregate(logger: winston.Logger) {
                 cursor.toArray((err, docs) => {
                     const proms: any[] = [];
                     // For each address pull transactions
+                    if(docs.length === 0) {
+                        logger.info("No votes - nothing to pre aggregate.")
+                        resolve();
+                        return;
+                    }
                     const addresses = docs[0].addresses;
                     
                     addresses.forEach((addr:string) => {
