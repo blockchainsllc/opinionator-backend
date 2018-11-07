@@ -46,7 +46,7 @@ export function preAggregate(logger: winston.Logger) {
                         resolve();
                         return;
                     }
-                    const addresses = docs[0].addresses;
+                    const addresses = docs[0].addresses.map((x:string) => x.toLowerCase());
                     
                     addresses.forEach((addr:string) => {
                         logger.info("Process address: " + addr);
