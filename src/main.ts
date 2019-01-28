@@ -11,7 +11,7 @@ const mongourl: string = process.env.MONGO_URL || 'mongodb://10.142.1.15:27017';
 const mongoname: string = process.env.MONGO_NAME|| 'votedata_tobalaba_stage';
 const mongodataname: string = process.env.MONGO_DATANAME|| 'voting_tobalaba';
 const rootPath: string = process.env.ROOT_PATH || '';
-const contractAddress: string = process.env.CONTRACT_ADDR || '0x096DA8ED2eaFd6945b325DfD515315CBeB36F6d3';
+const contractAddress: string = process.env.CONTRACT_ADDR || '0xfddfe21f7aaeefea5d313f8022538635fb1849ca';
 const srvPort: number = parseInt(process.env.PORT ? process.env.PORT : '9999') || 9999;
 const parityRpc: string = process.env.RPC_URL || 'https://rpc.slock.it/tobalaba';
 
@@ -43,7 +43,7 @@ const logger: winston.Logger = winston.createLogger({
     ],
     exceptionHandlers: [
         new winston.transports.Console({handleExceptions:true})
-      ],  
+      ],
       exitOnError: false, // <--- set this to false
 });
 
