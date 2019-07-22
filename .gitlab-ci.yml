@@ -54,6 +54,15 @@ package-into-docker:
     - sentry-cli releases deploys voting-backend@${CI_COMMIT_REF_NAME} new -e ${TARGET}
     - sentry-cli releases set-commits --auto voting-backend@${CI_COMMIT_REF_NAME}
 
+deploy-to-stage:
+    extends: .deploy-tmpl
+    only:
+      - /^v[0-9]+.[0-9]+.[0-9]+-(alpha|beta|rc)\.[0-9]+$/
+    variables:
+      TARGET: stage
+      CI_DBNAME: voting_goerli
+      CI_CONTRACT: '0x7cb0791fb8286e7ba38e14eca4fc0851967313ca'
+      CI_RPC: 'http://lb.parity-rpc/goerli'
 
 deploy-to-production:
     extends: .deploy-tmpl
@@ -61,23 +70,6 @@ deploy-to-production:
       - /^v[0-9]+.[0-9]+.[0-9]+$/
     variables:
       TARGET: production
-      CI_DBNAME: voting_goerli
-      CI_CONTRACT: '0xa603eed441b3f6d0a9143f846be6896de10318a3'
-      CI_RPC: 'http://lb.parity-rpc/goerli'
-
-deploy-to-stage:
-    extends: .deploy-tmpl
-    only:
-      - /^v[0-9]+.[0-9]+.[0-9]+-(alpha|beta|rc)\.[0-9]+$/
-    variables:
-      TARGET: stage
       CI_DBNAME: voting
-      CI_CONTRACT: '0xa603eed441b3f6d0a9143f846be6896de10318a3'
+      CI_CONTRACT: '0x88c9c5acA173605E528B1B44171147C41EE956D2'
       CI_RPC: 'http://lb.parity-rpc/mainnet'
-    
-
-
-
-
-
-
