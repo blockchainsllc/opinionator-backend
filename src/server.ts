@@ -245,7 +245,7 @@ export class BackendServer {
 
             if (pollObject.votingChoice == 0) {// useNewestVote
                 try {
-                    await this.db.updateVote(poll_id, proposal_id, addressNox, JSON.stringify(req.body.data), true);
+                    await this.db.updateVote(poll_id, proposal_id, addressNox, JSON.stringify(req.body.data));
                     res.json({
                         message: "success - New vote has been noted",
                         successfullyVoted: true
@@ -265,7 +265,7 @@ export class BackendServer {
                     const newVoteState = {
                         banned: 'for double voting'
                     };
-                    await this.db.updateVote(poll_id, proposal_id, addressNox, JSON.stringify(newVoteState), false);
+                    await this.db.updateVote(poll_id, proposal_id, addressNox, JSON.stringify(newVoteState));
 
                     res.json({
                         message: "success - This poll does not allow double voting, your vote was nullified",

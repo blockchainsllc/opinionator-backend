@@ -57,7 +57,7 @@ export default class Database {
         await mongo.close();
     }
 
-    public async updateVote(pollId: number, proposalId: number, address: string, message: string, isValidVote: boolean) : Promise<void> {
+    public async updateVote(pollId: number, proposalId: number, address: string, message: string) : Promise<void> {
         const mongo = new BlockChainDatabase(this.mongoUrl,this.mongoDbName);
         await mongo.connect();
         await mongo.updateVote(pollId,proposalId,address,message);
