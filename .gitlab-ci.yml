@@ -1,7 +1,6 @@
 image: docker.slock.it/build-images/node:10-alpine
 stages:
   - build
-  - test
   - package
   - deploy
 
@@ -20,14 +19,6 @@ build-backend:
         - build/
         - node_modules/
 
-test-backend:
-  stage: test
-  tags:
-    - short-jobs
-  script:
-    - sh /prepare.sh
-    - npm install
-
 package-into-docker:
   image: docker
   stage: package
@@ -44,39 +35,40 @@ package-into-docker:
     - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
     - docker push $CI_REGISTRY_IMAGE:latest
 
-deploy-to-production:
-    stage: deploy
-    tags:
-      - short-jobs
-    only:
-      - master
-    image: markuskeil/docker-and-rancher
-    variables:
-      CI_DBNAME_MAIN: votedata_mainnet
-      CI_DBNAME_TOB: votedata_tobalaba
-    dependencies:
+
+.deploy-tmpl:
+  stage: deploy
+  except:
+    - branches
+  tags:
+    - short-jobs
+  image: markuskeil/docker-and-rancher
+  services:
+    - docker:dind
+  dependencies:
       - package-into-docker
-    services:
-      - docker:dind
-    script:
-      - rancher-compose -p $CI_PROJECT_PATH_SLUG up -p -d -c --force-upgrade
+  script:
+    - cd deployment
+    - rancher -w up -d --prune -p -s voting-backend-${TARGET} -c --force-upgrade
+
+deploy-to-production:
+    extends: .deploy-tmpl
+    only:
+      - /^v[0-9]+.[0-9]+.[0-9]+$/
+    variables:
+      CI_DBNAME: voting_goerli
+      CI_CONTRACT: '0xa603eed441b3f6d0a9143f846be6896de10318a3'
+      CI_RPC: 'http://lb.parity-rpc/goerli'
 
 deploy-to-stage:
-    stage: deploy
-    tags:
-      - short-jobs
-    variables:
-      CI_DBNAME_MAIN: votedata_mainnet_stage
-      CI_DBNAME_TOB: votedata_tobalaba_stage
+    extends: .deploy-tmpl
     only:
-      - develop
-    image: markuskeil/docker-and-rancher
-    dependencies:
-      - package-into-docker
-    services:
-      - docker:dind
-    script:
-      - rancher-compose -p stage-$CI_PROJECT_PATH_SLUG up -p -d -c --force-upgrade
+      - /^v[0-9]+.[0-9]+.[0-9]+-(alpha|beta|rc)\.[0-9]+$/
+    variables:
+      CI_DBNAME: voting
+      CI_CONTRACT: '0xa603eed441b3f6d0a9143f846be6896de10318a3'
+      CI_RPC: 'http://lb.parity-rpc/mainnet'
+    
 
 
 
