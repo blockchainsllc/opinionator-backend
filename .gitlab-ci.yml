@@ -42,7 +42,7 @@ package-into-docker:
     - branches
   tags:
     - short-jobs
-  image: markuskeil/docker-and-rancher
+  image: docker.slock.it/build-images/deployment
   services:
     - docker:dind
   dependencies:
@@ -50,12 +50,17 @@ package-into-docker:
   script:
     - cd deployment
     - rancher -w up -d --prune -p -s voting-backend-${TARGET} -c --force-upgrade
+    - sentry-cli releases new -p voting-backend voting-backend@${CI_COMMIT_REF_NAME}
+    - sentry-cli releases deploys voting-backend@${CI_COMMIT_REF_NAME} new -e ${TARGET}
+    - sentry-cli releases set-commits --auto voting-backend@${CI_COMMIT_REF_NAME}
+
 
 deploy-to-production:
     extends: .deploy-tmpl
     only:
       - /^v[0-9]+.[0-9]+.[0-9]+$/
     variables:
+      TARGET: production
       CI_DBNAME: voting_goerli
       CI_CONTRACT: '0xa603eed441b3f6d0a9143f846be6896de10318a3'
       CI_RPC: 'http://lb.parity-rpc/goerli'
@@ -65,6 +70,7 @@ deploy-to-stage:
     only:
       - /^v[0-9]+.[0-9]+.[0-9]+-(alpha|beta|rc)\.[0-9]+$/
     variables:
+      TARGET: stage
       CI_DBNAME: voting
       CI_CONTRACT: '0xa603eed441b3f6d0a9143f846be6896de10318a3'
       CI_RPC: 'http://lb.parity-rpc/mainnet'
