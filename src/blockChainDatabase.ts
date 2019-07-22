@@ -100,7 +100,7 @@ export class BlockChainDatabase {
                 } else {
                     resolve([]);
                 }
-
+              
             });
         });
     }
@@ -147,7 +147,7 @@ export class BlockChainDatabase {
             mcVotes.aggregate([
                 {
                     $match: {
-                        "votedForProposal": proposalId.toString(),
+                        "votedForProposal": proposalId,
                         "pollid": pollId
                     }
                 },
