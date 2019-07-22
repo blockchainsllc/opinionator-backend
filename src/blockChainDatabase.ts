@@ -147,7 +147,7 @@ export class BlockChainDatabase {
             mcVotes.aggregate([
                 {
                     $match: {
-                        "votedForProposal": proposalId,
+                        "votedForProposal": proposalId.toString(),
                         "pollid": pollId
                     }
                 },
@@ -224,38 +224,37 @@ export class BlockChainDatabase {
     public getDeveloperGasForAddresses(txsenders: string[]): Promise<number> {
         const lcSenders =  txsenders.map(x => x.toLowerCase());
         return new Promise<number>((resolve, reject) => {
-            this.getContractsForSender(txsenders).then((contracts: string[]) => {
-                const mcBlocks: Collection<any> = this.db.collection("voting_aggregated");
-                mcBlocks.aggregate([
-                    {
-                        $match: {"address": {$in: lcSenders}, "type":"dev"}
-                    },
-                    {
-                        $group: {
-                            _id: 1,
-                            ct: { $sum:1},
-                            gasSum: { $sum: "$gasUsed" },
-                        }
+            const mcBlocks: Collection<any> = this.db.collection("voting_aggregated");
+            mcBlocks.aggregate([
+                {
+                    $match: {"address": {$in: lcSenders}, "type":"dev"}
+                },
+                {
+                    $group: {
+                        _id: 1,
+                        ct: { $sum:1},
+                        gasSum: { $sum: "$gasUsed" },
                     }
-                ], (err, cursor) => {
-                    if(err) {
-                        reject("unable to query: "+ err);
-                    }
+                }
+            ], (err, cursor) => {
+                if(err) {
+                    reject("unable to query: "+ err);
+                }
 
-                    cursor.toArray((err, docs) => {
-                        if(err) {
-                            reject("Unable to read documents:" + err);
-                        }
-                        if(docs.length > 0) {
-                            resolve(docs[0].gasSum);
-                        } else {
-                            resolve(0);
-                        }
-                    })
-                });
+                cursor.toArray((err, docs) => {
+                    if(err) {
+                        reject("Unable to read documents:" + err);
+                    }
+                    if(docs.length > 0) {
+                        resolve(docs[0].gasSum);
+                    } else {
+                        resolve(0);
+                    }
+                })
             });
         });
     }
+
 
     public getGasSumForAddresses(txsenders: string[]): Promise<number> {
         const lcSenders =  txsenders.map(x => x.toLowerCase());
