@@ -100,7 +100,7 @@ export class BlockChainDatabase {
                 } else {
                     resolve([]);
                 }
-
+              
             });
         });
     }
@@ -254,6 +254,7 @@ export class BlockChainDatabase {
             });
         });
     }
+
 
     public getGasSumForAddresses(txsenders: string[]): Promise<number> {
         const lcSenders =  txsenders.map(x => x.toLowerCase());
