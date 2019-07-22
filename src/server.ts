@@ -49,7 +49,7 @@ export class BackendServer {
         this.app.use(Sentry.Handlers.errorHandler() as express.ErrorRequestHandler);
 
         // Optional fallthrough error handler
-        this.app.use(function onError(err:Error, req:Request, res:Response, next:) {
+        this.app.use(function onError(err:Error, req:Request, res:Response, next:any) {
             // The error id is attached to `res.sentry` to be returned
             // and optionally displayed to the user for support.
             res.statusCode = 500;
