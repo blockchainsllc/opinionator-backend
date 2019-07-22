@@ -12,7 +12,6 @@ const testConfiguration: IServerConfiguration = {
     basePath: '',
     dbOptions: {
         mongoDbName: 'votedata_tobalaba_stage',
-        mongoDbDataName: 'voting_tobalaba',
         mongoUrl:'mongodb://10.142.1.14:27017'
     }
 };
