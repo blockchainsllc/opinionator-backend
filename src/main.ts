@@ -1,9 +1,13 @@
 /* Blockchain Voting -- Backend */
+const Sentry = require('@sentry/node');
 import fs from 'fs';
 import {IDatabaseOptions } from './database';
 import {BackendServer, IServerConfiguration} from "./server";
 import winston from 'winston';
 import { preAggregate } from './pre-aggregate';
+
+Sentry.init({ dsn: 'https://6edc8b7d9dc444f1b1e75683e2b07fe2@sentry.slock.it/6' });
+
 const Web3 = require('web3');
 
 //Get configuration from environment

@@ -2,6 +2,7 @@
 import {PollDto, ProposalDto} from "./dtos";
 const BN = require('bn.js');
 const Web3 = require('web3');
+const Sentry = require('@sentry/node');
 
 import Database, {IDatabaseOptions, Vote} from './database';
 import express, {Express, Request, Response, Router} from 'express';
@@ -31,6 +32,9 @@ export class BackendServer {
         this.contract = contract;
         this.config = config;
 
+        // add sentry to express
+        this.app.use(Sentry.Handlers.requestHandler() as express.RequestHandler);
+
         //prepare server
         this.app.use(bodyParser.urlencoded({
             extended: true
@@ -40,6 +44,16 @@ export class BackendServer {
 
         const router = this.setupRouter();
         this.app.use(this.config.basePath + '/api', router);
+
+        // The error handler must be before any other error middleware
+        this.app.use(Sentry.Handlers.errorHandler() as express.ErrorRequestHandler);
+
+        // Optional fallthrough error handler
+        this.app.use(function onError(err:Error, req:Request, res:Response, next:) {
+            // The error id is attached to `res.sentry` to be returned
+            // and optionally displayed to the user for support.
+            res.statusCode = 500;
+        });
 
         this.app.use(expressWinston.logger({
             winstonInstance: logger,
