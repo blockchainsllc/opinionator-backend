@@ -6,7 +6,11 @@ import {BackendServer, IServerConfiguration} from "./server";
 import winston from 'winston';
 import { preAggregate } from './pre-aggregate';
 
-Sentry.init({ dsn: 'https://6edc8b7d9dc444f1b1e75683e2b07fe2@sentry.slock.it/6' });
+Sentry.init({
+    dsn: 'https://6edc8b7d9dc444f1b1e75683e2b07fe2@sentry.slock.it/6',
+    environment: process.env.TARGET || 'local',
+    release: "voting-backend@" + (process.env.VERSION || 'v0.0.0')
+});
 
 const Web3 = require('web3');
 

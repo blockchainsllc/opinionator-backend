@@ -6,7 +6,9 @@ services:
       MONGO_URL: mongodb://10.142.1.15:27017
       MONGO_NAME: $CI_DBNAME
       CONTRACT_ADDR: $CI_CONTRACT
-      RPC_URL: $CI_RPC
+      RPC_URL: $CI_RPC,
+      VERSION: $CI_COMMIT_REF_NAME,
+      TARGET: $TARGET
     stdin_open: true
     tty: true
     labels:
