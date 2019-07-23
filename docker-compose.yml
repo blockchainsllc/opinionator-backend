@@ -1,32 +1,14 @@
 version: '2'
 services:
-  backend-mainnet:
+  backend:
     image: docker.slock.it/blockchain-voting/voting-backend:$CI_COMMIT_REF_NAME
     environment:
-      PG_HOST: sql-production.slockit.io
-      PG_NAME: voting
-      PG_USER: user_voting
-      PG_PASSWORD: $DEPLOY_PG_PASSWORD
-      MONGO_URL: mongodb://10.142.1.14:27017
-      MONGO_NAME: voting
-      CONTRACT_ADDR: '0xa603eed441b3f6d0a9143f846be6896de10318a3'
-      RPC_URL: https://rpc.slock.it/mainnet
-    stdin_open: true
-    tty: true
-    labels:
-      io.rancher.container.pull_image: always
-      io.rancher.scheduler.affinity:host_label: role=application
-  backend-tobalaba:
-    image: docker.slock.it/blockchain-voting/voting-backend:$CI_COMMIT_REF_NAME
-    environment:
-      PG_HOST: sql-production.slockit.io
-      PG_NAME: voting_tobalaba
-      PG_USER: user_voting
-      PG_PASSWORD: $DEPLOY_PG_PASSWORD
-      MONGO_URL: mongodb://10.142.1.14:27017
-      MONGO_NAME: voting_tobalaba
-      RPC_URL: https://rpc.slock.it/tobalaba
-      CONTRACT_ADDR: '0x20bac229d6280a0ef79b2dc472b0c0113d2b993f'
+      MONGO_URL: mongodb://10.142.1.15:27017
+      MONGO_NAME: $CI_DBNAME
+      CONTRACT_ADDR: $CI_CONTRACT
+      RPC_URL: $CI_RPC,
+      VERSION: $CI_COMMIT_REF_NAME,
+      TARGET: $TARGET
     stdin_open: true
     tty: true
     labels:

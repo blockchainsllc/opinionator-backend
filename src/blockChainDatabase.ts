@@ -1,5 +1,4 @@
 import {Collection, MongoClient} from "mongodb";
-import { Pool } from "pg";
 
 export class BlockChainDatabase {
     // Connects to the blockchain holding MongoDB to query for stuff
@@ -148,7 +147,7 @@ export class BlockChainDatabase {
             mcVotes.aggregate([
                 {
                     $match: {
-                        "votedForProposal": proposalId,
+                        "votedForProposal": proposalId.toString(),
                         "pollid": pollId
                     }
                 },
@@ -180,18 +179,19 @@ export class BlockChainDatabase {
 
 
     private getContractsForSender(txsenders: string[]): Promise<string[]> {
+        const lcSenders =  txsenders.map(x => x.toLowerCase());
         return new Promise<string[]>((resolve, reject) => {
             const mcBlocks: Collection<any> = this.db.collection("blocks");
             mcBlocks.aggregate([
                 {
                     $match: {
-                        "txs.sender": {$in: txsenders}
+                        "txs.sender": {$in: lcSenders}
                     }
                 },
                 {$unwind: {path: "$txs"}},
                 {
                     $match: {
-                        "txs.sender": {$in: txsenders},
+                        "txs.sender": {$in: lcSenders},
                         "txs.receipt.contract": {$ne: ""}
                     }
                 },
@@ -222,62 +222,52 @@ export class BlockChainDatabase {
     }
 
     public getDeveloperGasForAddresses(txsenders: string[]): Promise<number> {
+        const lcSenders =  txsenders.map(x => x.toLowerCase());
         return new Promise<number>((resolve, reject) => {
-            this.getContractsForSender(txsenders).then((contracts: string[]) => {
-                const mcBlocks: Collection<any> = this.db.collection("blocks");
-                mcBlocks.aggregate([
-                    { $match: { "txs.traces.to":{ $in: contracts } } },
-                    { $unwind: { path : "$txs" } },
-                    { $unwind: { path : "$txs.traces" } },
-                    { $match: { "txs.traces.to":{ $in: contracts } } },
-                    {
-                        $group: {
-                            _id: 1,
-                            ct: { $sum:1},
-                            gasSum: { $sum: "$txs.traces.gasused" },
-                        }
+            const mcBlocks: Collection<any> = this.db.collection("voting_aggregated");
+            mcBlocks.aggregate([
+                {
+                    $match: {"address": {$in: lcSenders}, "type":"dev"}
+                },
+                {
+                    $group: {
+                        _id: 1,
+                        ct: { $sum:1},
+                        gasSum: { $sum: "$gasUsed" },
                     }
-                ], (err, cursor) => {
-                    if(err) {
-                        reject("unable to query: "+ err);
-                    }
+                }
+            ], (err, cursor) => {
+                if(err) {
+                    reject("unable to query: "+ err);
+                }
 
-                    cursor.toArray((err, docs) => {
-                        if(err) {
-                            reject("Unable to read documents:" + err);
-                        }
-                        if(docs.length > 0) {
-                            resolve(docs[0].gasSum);
-                        } else {
-                            resolve(0);
-                        }
-                    })
-                });
+                cursor.toArray((err, docs) => {
+                    if(err) {
+                        reject("Unable to read documents:" + err);
+                    }
+                    if(docs.length > 0) {
+                        resolve(docs[0].gasSum);
+                    } else {
+                        resolve(0);
+                    }
+                })
             });
         });
     }
 
+
     public getGasSumForAddresses(txsenders: string[]): Promise<number> {
+        const lcSenders =  txsenders.map(x => x.toLowerCase());
         return new Promise<number>((resolve, reject) => {
-            const mcBlocks: Collection<any> = this.db.collection("blocks");
+            const mcBlocks: Collection<any> = this.db.collection("voting_aggregated");
             mcBlocks.aggregate([
                 {
-                    $match: {"txs.sender": {$in: txsenders}}
-                },
-                {$unwind: {path: "$txs"}},
-                {
-                    $match: {"txs.sender": {$in: txsenders}}
-                },
-                {
-                    $project: {
-                        sender: "$txs.sender",
-                        gas: "$txs.receipt.gasused"
-                    }
+                    $match: {"address": {$in: lcSenders}, "type":"addressgas"}
                 },
                 {
                     $group: {
                         _id: "1",
-                        gasTotal: {$sum: "$gas"}
+                        gasTotal: {$sum: "$gasUsed"}
                     }
                 }
             ], (err, cursor) => {
@@ -300,22 +290,18 @@ export class BlockChainDatabase {
     }
 
     public getDifficultySumForMiners(miners: string[]): Promise<number> {
+        const lcMiners =  miners.map(x => x.toLowerCase());
+
         return new Promise<number>((resolve, reject) => {
-            const mcBlocks: Collection<any> = this.db.collection("blocks");
+            const mcBlocks: Collection<any> = this.db.collection("voting_aggregated");
             mcBlocks.aggregate([
                 {
-                    $match: {"miner": {$in: miners}}
-                },
-                {
-                    $project: {
-                        miner: 1,
-                        dif: 1
-                    }
+                    $match: {"address": {$in: lcMiners}, "type":"miner"}
                 },
                 {
                     $group: {
                         _id: "1",
-                        totalDifficulty: {$sum: "$dif"}
+                        totalDifficulty: {$sum: "$difficulty"}
                     }
                 }
             ], (err, cursor) => {

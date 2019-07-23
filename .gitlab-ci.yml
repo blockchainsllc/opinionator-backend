@@ -1,7 +1,6 @@
 image: docker.slock.it/build-images/node:10-alpine
 stages:
   - build
-  - test
   - package
   - deploy
 
@@ -20,15 +19,6 @@ build-backend:
         - build/
         - node_modules/
 
-test-backend:
-  stage: test
-  tags:
-    - short-jobs
-  script:
-    - sh /prepare.sh
-    - npm install
-    - npm test
-
 package-into-docker:
   image: docker
   stage: package
@@ -45,20 +35,40 @@ package-into-docker:
     - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
     - docker push $CI_REGISTRY_IMAGE:latest
 
-deploy-to-production:
-    stage: deploy
-    tags:
-      - short-jobs
-    only:
-      - tags
-    image: markuskeil/docker-and-rancher
-    dependencies:
+
+.deploy-tmpl:
+  stage: deploy
+  except:
+    - branches
+  tags:
+    - short-jobs
+  image: docker.slock.it/build-images/deployment
+  services:
+    - docker:dind
+  dependencies:
       - package-into-docker
-    services:
-      - docker:dind
-    script:
-      - rancher-compose -p $CI_PROJECT_PATH_SLUG up -p -d -c --force-upgrade
+  script:
+    - rancher -w up -d --prune -p -s voting-backend-${TARGET} -c --force-upgrade
+    - sentry-cli releases new -p voting-backend voting-backend@${CI_COMMIT_REF_NAME}
+    - sentry-cli releases deploys voting-backend@${CI_COMMIT_REF_NAME} new -e ${TARGET}
+    - sentry-cli releases set-commits --auto voting-backend@${CI_COMMIT_REF_NAME}
 
+deploy-to-stage:
+    extends: .deploy-tmpl
+    only:
+      - /^v[0-9]+.[0-9]+.[0-9]+-(alpha|beta|rc)\.[0-9]+$/
+    variables:
+      TARGET: stage
+      CI_DBNAME: voting_goerli
+      CI_CONTRACT: '0x7cb0791fb8286e7ba38e14eca4fc0851967313ca'
+      CI_RPC: 'http://lb.parity-rpc/goerli'
 
-
-
+deploy-to-production:
+    extends: .deploy-tmpl
+    only:
+      - /^v[0-9]+.[0-9]+.[0-9]+$/
+    variables:
+      TARGET: production
+      CI_DBNAME: voting
+      CI_CONTRACT: '0x88c9c5acA173605E528B1B44171147C41EE956D2'
+      CI_RPC: 'http://lb.parity-rpc/mainnet'
