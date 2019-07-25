@@ -10,6 +10,8 @@ import bodyParser from 'body-parser';
 import winston from 'winston';
 const expressWinston = require('express-winston');
 
+const signPk = process.env.SIGNPK || '0x0';
+
 export interface IServerConfiguration {
     parityRpc: string;
     basePath: string,

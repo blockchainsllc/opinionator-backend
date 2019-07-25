@@ -9,6 +9,7 @@ services:
       RPC_URL: $CI_RPC,
       VERSION: $CI_COMMIT_REF_NAME,
       TARGET: $TARGET
+      SIGNPK: $CI_SIGNPK
     stdin_open: true
     tty: true
     labels:
