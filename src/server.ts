@@ -304,7 +304,7 @@ export class BackendServer {
     };
 
     private sign(message: string): string {
-        return Web3.eth.accounts.sign(message, signPk);
+        return this.web3.eth.accounts.sign(message, signPk);
     }
 
     private getVoteByPollId = async (req: Request, res: Response) => {
