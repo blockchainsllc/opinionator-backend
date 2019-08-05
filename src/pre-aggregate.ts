@@ -1,9 +1,8 @@
 import {Collection, MongoClient} from "mongodb";
 import winston from 'winston';
 
-const mongourl: string = process.env.MONGO_URL || 'mongodb://10.142.1.15:27017';
-const mongodataname: string = process.env.MONGO_DATANAME|| 'voting_tobalaba';
-const mongoname: string = process.env.MONGO_NAME|| 'votedata_tobalaba_stage';
+const mongourl: string = process.env.MONGO_URL || 'mongodb://10.142.1.25:27017';
+const mongoname: string = process.env.MONGO_NAME|| 'voting';
 
 export function preAggregate(logger: winston.Logger) {
     return new Promise((resolve, reject) => {
@@ -15,13 +14,11 @@ export function preAggregate(logger: winston.Logger) {
                 reject();
             }
 
-            
-            const rawdb = client.db(mongodataname);
             const votedb = client.db(mongoname);
 
             // gert collections
-            const mcBlocks = rawdb.collection('blocks');
-            const mcVoting = rawdb.collection('voting_aggregated');
+            const mcBlocks = votedb.collection('blocks');
+            const mcVoting = votedb.collection('voting_aggregated');
 
 
             // get all addresses that have voted

@@ -15,12 +15,12 @@ Sentry.init({
 const Web3 = require('web3');
 
 //Get configuration from environment
-const mongourl: string = process.env.MONGO_URL || 'mongodb://10.142.1.15:27017';
-const mongoname: string = process.env.MONGO_NAME|| 'voting_goerli';
+const mongourl: string = process.env.MONGO_URL || 'mongodb://10.142.1.25:27017';
+const mongoname: string = process.env.MONGO_NAME|| 'voting';
 const rootPath: string = process.env.ROOT_PATH || '';
 const contractAddress: string = process.env.CONTRACT_ADDR || '0x096DA8ED2eaFd6945b325DfD515315CBeB36F6d3';
 const srvPort: number = parseInt(process.env.PORT ? process.env.PORT : '9999') || 9999;
-const parityRpc: string = process.env.RPC_URL || 'https://rpc.slock.it/goerli';
+const parityRpc: string = process.env.RPC_URL || 'https://rpc.slock.it/mainnet';
 
 // Build config objects
 const dbOpts: IDatabaseOptions = {
