@@ -10,6 +10,8 @@ import bodyParser from 'body-parser';
 import winston from 'winston';
 const expressWinston = require('express-winston');
 
+const signPk = process.env.SIGNPK || '0x0';
+
 export interface IServerConfiguration {
     parityRpc: string;
     basePath: string,
@@ -245,7 +247,7 @@ export class BackendServer {
             try {
                 await this.db.createVote(poll_id, proposal_id, addressNox, JSON.stringify(req.body.data));
                 res.json({
-                    message: "success - vote taken",
+                    message: this.sign(JSON.stringify(req.body.data)),
                     successfullyVoted: true
                 });
             } catch (err) {
@@ -261,7 +263,7 @@ export class BackendServer {
                 try {
                     await this.db.updateVote(poll_id, proposal_id, addressNox, JSON.stringify(req.body.data));
                     res.json({
-                        message: "success - New vote has been noted",
+                        message: this.sign(JSON.stringify(req.body.data)), //"success - New vote has been noted",
                         successfullyVoted: true
                     });
                 } catch (err) {
@@ -300,6 +302,10 @@ export class BackendServer {
             }
         }
     };
+
+    private sign(message: string): string {
+        return this.web3.eth.accounts.sign(message, signPk);
+    }
 
     private getVoteByPollId = async (req: Request, res: Response) => {
         // TODO: verify that pollid is integer
